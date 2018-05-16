@@ -9,31 +9,34 @@
 
 using namespace std;
 
-#define DEFAULT_SIZE 10000
-
-template <typename K, typename V>
-class circularMap
+namespace tokamak
 {
-	    typedef map<K,V> map_t;
-	    typedef deque<K> deque_t;
-
-        typedef typename std::map<K,V>::iterator iterator;
-
-    private:
-
-	    map_t map_;
-	    deque_t deque_;
-        int size;
-
-	    void _ensure(); 
-
-    public:
-
-        circularMap();
-        circularMap(int size);
-	    iterator begin();
-        iterator end();
-	    void put(K k, V v);
-};
+    #define DEFAULT_SIZE 10000
+    
+    template <typename K, typename V>
+    class circularMap
+    {
+    	    typedef map<K,V> map_t;
+    	    typedef deque<K> deque_t;
+    
+            typedef typename std::map<K,V>::iterator iterator;
+    
+        private:
+    
+    	    map_t map_;
+    	    deque_t deque_;
+            int size;
+    
+    	    void _ensure(); 
+    
+        public:
+    
+            circularMap();
+            circularMap(int size);
+    	    iterator begin();
+            iterator end();
+    	    void put(K k, V v);
+    };
+}
 
 #endif
