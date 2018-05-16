@@ -3,6 +3,7 @@
 
 #include <PositionManagerBase.hpp>
 #include <StateOfTransform.hpp>
+#include <circularMap.hpp>
 #include <vector>
 #include <mutex>
 
@@ -17,12 +18,12 @@ namespace tokamak
     class Tokamak
     {
         protected:
-            std::map<PositionManager::TimeUs,StateOfTransform> timeLine; // Ideal would be a circular map
-            PositionManager::Graph poseGraph; // Actual Graph
+            circularMap<PositionManager::TimeUs,StateOfTransform>* timeLine; 
             PositionManager::FrameId fixedFrame; // Frame in which the robot pose will be released by PoM
             int32_t runningFrequency; //Frequency of the base job of PoM (release latest pose)
             int32_t secondsKept; // Number of seconds contained into memory
             int32_t bufferSize; // Size of the buffer to hold all information in memory
+
             std::mutex transformAccess;
             void lockTimeLine();
             void unlockTimeline();
@@ -30,8 +31,11 @@ namespace tokamak
 
         public:
             Tokamak();
-            Tokamak(int32_t freq);
+            Tokamak(int32_t freq); // Constructor with tokamak running frequency
+            Tokamak(int32_t freq, int32_t sec); // Constructor with tokamak running frequency and number of seconds kept
             ~Tokamak();
+            clean_up(); // Release memory allocated by instanciating tokamak
+
             //TODO Add a way for PoM to know which frames exist --> URDF/XML => Format à définir 
             bool insertNewTransform(PositionManager::Pose transform /*,timeLine*/);
             bool insertNewTransforms(std::vector<PositionManager::Pose>& listOfTransforms /*, timeLine*/);

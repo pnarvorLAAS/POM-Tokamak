@@ -4,16 +4,23 @@ namespace tokamak
 {
     Tokamak::Tokamak( )
     {
-       runningFrequency = DEFAULT_FREQUENCY;
-       secondsKept = DEFAULT_TIME_KEPT;
-       bufferSize = DEFAULT_FREQUENCY * DEFAULT_TIME_KEPT;
-
+        runningFrequency = DEFAULT_FREQUENCY;
+        secondsKept = DEFAULT_TIME_KEPT;
+        bufferSize = DEFAULT_FREQUENCY * DEFAULT_TIME_KEPT;
+        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
     }
 
     Tokamak::Tokamak(int32_t freq): runningFrequency(freq)
     {
         secondsKept = DEFAULT_TIME_KEPT;
-        bufferSize = DEFAULT_FREQUENCY * DEFAULT_TIME_KEPT;
+        bufferSize = runningFrequency * DEFAULT_TIME_KEPT;
+        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
+    }
+
+    Tokamak::Tokamak(int32_t freq, int32_t sec): runningFrequency(freq), secondsKept(sec)
+    {
+        bufferSize = runningFrequency * secondsKept;
+        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
     }
 
     bool Tokamak::insertNewTransform(PositionManager::Pose transform)
@@ -26,6 +33,18 @@ namespace tokamak
         // Time of addition inside the timeLine
         tfState.timeofAddition = PositionManager::TimeManager::now();
 
+        // Add Transform
+
+        if (transform._parent == fixedFrame) // The incoming transform "fixedFrame" is the right one
+        {
+            tfState.pose_fixedFrame_robotFrame = transform._tr;
+        }
+        else
+        {
+            //TODO: set the transform in the right frame of reference (if possible). But this 
+            //will depend on how we add a way for PoM to know which frames exist
+        }
+
         // Add time to the frame to make it easier
         std::ostringstream oss;
         oss << transform._childTime;
@@ -34,7 +53,7 @@ namespace tokamak
         // Add to timeLine
 
         lockTimeLine();
-        timeLine.insert(std::pair<PositionManager::TimeUs,StateOfTransform>(transform._childTime,tfState));
+        timeLine.put(std::pair<PositionManager::TimeUs,StateOfTransform>(transform._childTime,tfState));
         unlockTimeline();
 
         return true;
