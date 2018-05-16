@@ -7,11 +7,10 @@ namespace tokamak
 {
     struct StateOfTransform
     {
-        //TODO add transform
         bool fused;
         int flagged;
-        PositionManager::FrameId frameId;
         PositionManager::TimeUs timeofAddition;
+        PositionManager::Transform pose_fixedFrame_robotFrame;
     };
 }
 
