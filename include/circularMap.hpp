@@ -35,6 +35,9 @@ namespace tokamak
             circularMap(int size);
     	    iterator begin();
             iterator end();
+            iterator find_upper(K key);
+            iterator find_lower(K key);
+            iterator find(K key);
     	    void put(K k, V v);
     };
 }
