@@ -10,7 +10,7 @@ namespace tokamak
         bool fused;
         int flagged;
         PositionManager::TimeUs timeofAddition;
-        PositionManager::Transform pose_fixedFrame_robotFrame;
+        PositionManager::Pose pose_fixedFrame_robotFrame;
     };
 }
 
