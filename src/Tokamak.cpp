@@ -107,9 +107,7 @@ namespace tokamak
             if (transform._parent == transform._child)
             {
 
-                lockTimeLine();
-                PositionManager::Transform fixedFrame_robotFrame_parentTime = timeLine->find(transform._parentTime)->second.pose_fixedFrame_robotFrame._tr;
-                unlockTimeLine();
+                PositionManager::Transform fixedFrame_robotFrame_parentTime = timeLine_find(transform._parentTime).pose_fixedFrame_robotFrame._tr;
 
                 PositionManager::Transform fixedFrame_robotFrame_childTime = fixedFrame_robotFrame_parentTime * transform._tr;
                 tfState.pose_fixedFrame_robotFrame._tr = fixedFrame_robotFrame_childTime;
@@ -153,11 +151,23 @@ namespace tokamak
         return true;
     }
 
-    PositionManager::Pose Tokamak::getLatestRobotPose()
+    void Tokamak::getLatestRobotPose()
     {
-        lockTimeLine();
-        return timeLine->end()->second.pose_fixedFrame_robotFrame;
-        unlockTimeLine();
+        try
+        {
+            lockTimeLine();
+            if (timeLine->empty())
+            {
+                throw e_no_publish;
+            }
+            posePublish = timeLine->end()->second.pose_fixedFrame_robotFrame;
+            unlockTimeLine();
+        }
+        catch (std::exception const &e)
+        {
+            cerr << "[CANNOT PUBLISH POSE: ]" << e.what() << std::endl;
+        }
+        return posePublish;
     }
     
     void Tokamak::validityCheckGetTransform(
@@ -201,7 +211,7 @@ namespace tokamak
         }
     }
 
-    PositionManager::Pose Tokamak::getTransform(
+    void Tokamak::getTransform(
             const PositionManager::TimeUs parentTime,
             const PositionManager::TimeUs childTime,
             const PositionManager::FrameId parentFrame,
@@ -209,7 +219,10 @@ namespace tokamak
                                                   timeLine
                                                  */)
     {
-        PositionManager::Pose transformRobot;
+        poseRequest._parent = parentFrame;
+        poseRequest._child = childFrame;
+        poseRequest._parentTime = parentTime;
+        poseRequest._childTime = childTime;
         /* Validity checks */
         try
         {
@@ -252,48 +265,55 @@ namespace tokamak
 
             if (parentFrame == childFrame) // Delta pose
             {
-                lockTimeLine();
-				PositionManager::Transform robotFrame_fixedFrame_parent = timeLine->find(parentTime)->second.pose_fixedFrame_robotFrame._tr;
-				PositionManager::Transform robotFrame_fixedFrame_child = timeLine->find(childTime)->second.pose_fixedFrame_robotFrame._tr;
+				PositionManager::Transform robotFrame_fixedFrame_parent = timeLine_find(parentTime).pose_fixedFrame_robotFrame._tr;
+				PositionManager::Transform robotFrame_fixedFrame_child = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
 				PositionManager::Transform robotFrame_parent_child = robotFrame_fixedFrame_parent.inverse() * robotFrame_fixedFrame_child;
-				transformRobot._tr = robotFrame_parent_child;
-                unlockTimeLine();
-
+				poseRequest._tr = robotFrame_parent_child;
             }
         }
         catch (std::exception const& e)
         {
             std::cerr  << "[DELTA POSE CHECK FAILED]: " << e.what() << std::endl;
         }
-        return transformRobot;
+
+        /* Case normal pose */
+        try
+        {
+            if (parentFrame == fixedFrame)
+            {
+                poseRequest._tr = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
+            }
+        }
+        catch (std::exception const &e)
+        {
+            std::cerr << "[POSE REQUEST FAILED]: " << e.what() << std::endl;
+        }
+        return poseRequest;
     }
 
-    PositionManager::Pose Tokamak::getTransform(PositionManager::Pose pose/*, timeLine*/)
+    void Tokamak::getTransform(PositionManager::Pose pose/*, timeLine*/)
     {
-        PositionManager::Pose robotPose;
-        return robotPose;
+        return getTransform(pose._parentTime,pose._childTime,pose._parent,pose._child);
     }
 
-    PositionManager::Pose Tokamak::getTransform(
+    void Tokamak::getTransform(
             const PositionManager::TimeUs time,
             const PositionManager::FrameId parentFrame,
             const PositionManager::FrameId childFrame /*,
                                                   timeLine
                                                  */)
     {
-        PositionManager::Pose robotPose;
-        return robotPose;
+        return getTransform(time,time,parentFrame,childFrame);
     }
 
-    PositionManager::Pose Tokamak::getTransform(
+    void Tokamak::getTransform(
             const PositionManager::TimeUs parentTime,
             const PositionManager::TimeUs childTime,
             const PositionManager::FrameId frame /*,
                                              timeLine
                                             */)
     {
-        PositionManager::Pose robotPose;
-        return robotPose;
+        return getTransform(parentTime,childTime,frame,frame);
     }
 
     void Tokamak::lockTimeLine()
@@ -306,5 +326,11 @@ namespace tokamak
         transformAccess.unlock();
     }
 
-
+    StateOfTransform Tokamak::timeLine_find(PositionManager::TimeUs key)
+    {
+        lockTimeLine();
+        StateOfTransform it = timeLine->find(key)->second;
+        unlockTimeLine();
+        return it;
+    }
 }

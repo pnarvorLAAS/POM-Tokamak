@@ -20,7 +20,8 @@
 #define e_inverse_time_transform        Error("The transform asked is reversed in time")
 #define e_interpolation                 Error("The transform requires interpolation. It has not been implemented yet")
 #define e_static_transform              Error("The transform has same parent and child. It no transform at all")
-#define e_wrong_frames                  Error("The request is in the wrong frame");
+#define e_wrong_frames                  Error("The request is in the wrong frame")
+#define e_no_publish                    Error("Publishing of poses has not yet started")
 
 
 namespace tokamak
@@ -29,7 +30,7 @@ namespace tokamak
 
     class Tokamak
     {
-        protected:
+        private:
             circularMap<PositionManager::TimeUs,StateOfTransform>* timeLine; 
             int32_t runningFrequency; //Frequency of the base job of PoM (release latest pose)
             int32_t secondsKept; // Number of seconds contained into memory
@@ -40,6 +41,10 @@ namespace tokamak
             std::mutex transformAccess;
             void lockTimeLine();
             void unlockTimeLine();
+
+        protected:
+            PositionManager::Pose posePublish;
+            PositionManager::Pose poseRequest;
 
 
         public:
@@ -55,7 +60,7 @@ namespace tokamak
             void validityCheckInsertion(const PositionManager::Pose transform);
             bool insertNewTransform(PositionManager::Pose transform /*,timeLine*/);
             bool insertNewTransforms(std::vector<PositionManager::Pose>& listOfTransforms /*, timeLine*/);
-            PositionManager::Pose getLatestRobotPose(/*timeLine,poseGraph,fixedFrame*/); // Latest Transform from RBF (Robot Body Frame) to LTF (Local Terrain Frame)
+            void getLatestRobotPose(/*timeLine,posePublish,fixedFrame*/); // Latest Transform from RBF (Robot Body Frame) to LTF (Local Terrain Frame)
 
             void validityCheckGetTransform(
                                         const PositionManager::TimeUs parentTime, 
@@ -66,30 +71,33 @@ namespace tokamak
                                         */
                                         );
 
-            PositionManager::Pose getTransform(PositionManager::Pose pose);
+            void getTransform(PositionManager::Pose pose/*,timeLine,poseRequest*/);
 
-            PositionManager::Pose getTransform(
+            void getTransform(
                                         const PositionManager::TimeUs parentTime, 
                                         const PositionManager::TimeUs childTime, 
                                         const PositionManager::FrameId parentFrame, 
                                         const PositionManager::FrameId childFrame /*,
-                                        timeLine
+                                        timeLine,
+                                        poseRequest
                                         */
                                         );
 
-            PositionManager::Pose getTransform(
+            void getTransform(
                                         const PositionManager::TimeUs time,
                                         const PositionManager::FrameId parentFrame,
                                         const PositionManager::FrameId childFrame /*,
-                                        timeLine
+                                        timeLine,
+                                        poseRequest
                                         */
                                         );
 
-            PositionManager::Pose getTransform(
+            void getTransform(
                                         const PositionManager::TimeUs parentTime,
                                         const PositionManager::TimeUs childTime,
                                         const PositionManager::FrameId frame /*,
-                                        timeLine
+                                        timeLine,
+                                        poseRequest
                                         */
                                         );
 
@@ -100,6 +108,7 @@ namespace tokamak
 
             bool flagTransform(PositionManager::TimeUs time); //Times might not be exactly the ones the DFPCs ask for. In this case, interpolation will be necessary.
             bool unFlagTransform(PositionManager::TimeUs time);
+            StateOfTransform timeLine_find(PositionManager::TimeUs key);
 
 
     };
