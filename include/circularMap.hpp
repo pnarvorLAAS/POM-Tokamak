@@ -38,6 +38,7 @@ namespace tokamak
             iterator find_upper(K key);
             iterator find_lower(K key);
             iterator find(K key);
+            bool empty();
     	    void put(K k, V v);
     };
 }

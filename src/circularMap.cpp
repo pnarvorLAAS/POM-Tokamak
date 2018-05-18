@@ -36,6 +36,11 @@ iterator circularMap::find(K key)
     return map_.find(key);
 }
 
+bool circularMap::empty()
+{
+    return map_.empty();
+}
+
 void circularMap::put(K k, V v)
 { 
 	map_.insert(std::make_pair(k,v));
