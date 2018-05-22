@@ -29,8 +29,8 @@ namespace tokamak
             Pose_InFuse update_respond();
 
             // Conversion to BitStream
-            BitStream encode_publish();
-            BitStream encode_response();
+            void encode_publish(BitStream &b);
+            void encode_response(BitStream &b);
 
             // Decoding from ASN1 BitStream
             void decode_insertPose(BitStream &msg, PositionManager::Pose &poseToDecode);
