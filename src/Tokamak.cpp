@@ -151,7 +151,7 @@ namespace tokamak
         return true;
     }
 
-    void Tokamak::getLatestRobotPose()
+    PositionManager::Pose Tokamak::getLatestRobotPose()
     {
         try
         {
@@ -211,7 +211,7 @@ namespace tokamak
         }
     }
 
-    void Tokamak::getTransform(
+    PositionManager::Pose Tokamak::getTransform(
             const PositionManager::TimeUs parentTime,
             const PositionManager::TimeUs childTime,
             const PositionManager::FrameId parentFrame,
@@ -219,10 +219,10 @@ namespace tokamak
                                                   timeLine
                                                  */)
     {
-        poseRequest._parent = parentFrame;
-        poseRequest._child = childFrame;
-        poseRequest._parentTime = parentTime;
-        poseRequest._childTime = childTime;
+        poseRespond._parent = parentFrame;
+        poseRespond._child = childFrame;
+        poseRespond._parentTime = parentTime;
+        poseRespond._childTime = childTime;
         /* Validity checks */
         try
         {
@@ -268,7 +268,7 @@ namespace tokamak
 				PositionManager::Transform robotFrame_fixedFrame_parent = timeLine_find(parentTime).pose_fixedFrame_robotFrame._tr;
 				PositionManager::Transform robotFrame_fixedFrame_child = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
 				PositionManager::Transform robotFrame_parent_child = robotFrame_fixedFrame_parent.inverse() * robotFrame_fixedFrame_child;
-				poseRequest._tr = robotFrame_parent_child;
+				poseRespond._tr = robotFrame_parent_child;
             }
         }
         catch (std::exception const& e)
@@ -281,22 +281,22 @@ namespace tokamak
         {
             if (parentFrame == fixedFrame)
             {
-                poseRequest._tr = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
+                poseRespond._tr = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
             }
         }
         catch (std::exception const &e)
         {
             std::cerr << "[POSE REQUEST FAILED]: " << e.what() << std::endl;
         }
-        return poseRequest;
+        return poseRespond;
     }
 
-    void Tokamak::getTransform(PositionManager::Pose pose/*, timeLine*/)
+    PositionManager::Pose Tokamak::getTransform(PositionManager::Pose pose/*, timeLine*/)
     {
         return getTransform(pose._parentTime,pose._childTime,pose._parent,pose._child);
     }
 
-    void Tokamak::getTransform(
+    PositionManager::Pose Tokamak::getTransform(
             const PositionManager::TimeUs time,
             const PositionManager::FrameId parentFrame,
             const PositionManager::FrameId childFrame /*,
@@ -306,7 +306,7 @@ namespace tokamak
         return getTransform(time,time,parentFrame,childFrame);
     }
 
-    void Tokamak::getTransform(
+    PositionManager::Pose Tokamak::getTransform(
             const PositionManager::TimeUs parentTime,
             const PositionManager::TimeUs childTime,
             const PositionManager::FrameId frame /*,

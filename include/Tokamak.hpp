@@ -44,7 +44,7 @@ namespace tokamak
 
         protected:
             PositionManager::Pose posePublish;
-            PositionManager::Pose poseRequest;
+            PositionManager::Pose poseRespond;
 
 
         public:
@@ -60,7 +60,7 @@ namespace tokamak
             void validityCheckInsertion(const PositionManager::Pose transform);
             bool insertNewTransform(PositionManager::Pose transform /*,timeLine*/);
             bool insertNewTransforms(std::vector<PositionManager::Pose>& listOfTransforms /*, timeLine*/);
-            void getLatestRobotPose(/*timeLine,posePublish,fixedFrame*/); // Latest Transform from RBF (Robot Body Frame) to LTF (Local Terrain Frame)
+            PositionManager::Pose getLatestRobotPose(/*timeLine,posePublish,fixedFrame*/); // Latest Transform from RBF (Robot Body Frame) to LTF (Local Terrain Frame)
 
             void validityCheckGetTransform(
                                         const PositionManager::TimeUs parentTime, 
@@ -71,9 +71,9 @@ namespace tokamak
                                         */
                                         );
 
-            void getTransform(PositionManager::Pose pose/*,timeLine,poseRequest*/);
+            PositionManager::Pose getTransform(PositionManager::Pose pose/*,timeLine,poseRequest*/);
 
-            void getTransform(
+            PositionManager::Pose getTransform(
                                         const PositionManager::TimeUs parentTime, 
                                         const PositionManager::TimeUs childTime, 
                                         const PositionManager::FrameId parentFrame, 
@@ -83,7 +83,7 @@ namespace tokamak
                                         */
                                         );
 
-            void getTransform(
+            PositionManager::Pose getTransform(
                                         const PositionManager::TimeUs time,
                                         const PositionManager::FrameId parentFrame,
                                         const PositionManager::FrameId childFrame /*,
@@ -92,7 +92,7 @@ namespace tokamak
                                         */
                                         );
 
-            void getTransform(
+            PositionManager::Pose getTransform(
                                         const PositionManager::TimeUs parentTime,
                                         const PositionManager::TimeUs childTime,
                                         const PositionManager::FrameId frame /*,
