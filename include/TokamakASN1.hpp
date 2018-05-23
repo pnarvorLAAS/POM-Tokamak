@@ -20,6 +20,11 @@ namespace tokamak
 
         public:
             TokamakASN1();
+            TokamakASN1(int32_t freq); 
+            TokamakASN1(int32_t freq, int32_t sec); 
+            TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame);
+            TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame);
+
             ~TokamakASN1();
             void clean_up();
 
@@ -33,8 +38,8 @@ namespace tokamak
             void encode_response(BitStream &b);
 
             // Decoding from ASN1 BitStream
-            void decode_insertPose(BitStream &msg, PositionManager::Pose &poseToDecode);
-            void decode_request(BitStream &msg, PositionManager::Pose &poseToDecode);
+            bool decode_insertPose(BitStream &msg, PositionManager::Pose &poseToDecode);
+            bool decode_request(BitStream &msg, PositionManager::Pose &poseToDecode);
 
 
     };

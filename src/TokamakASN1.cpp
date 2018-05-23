@@ -2,7 +2,51 @@
 
 namespace tokamak{
 
-    TokamakASN1::TokamakASN1()
+    TokamakASN1::TokamakASN1(): Tokamak()
+    {
+        poseInFuseInsert    = new Pose_InFuse;
+        poseInFuseRespond   = new Pose_InFuse;
+        poseInFusePublish   = new Pose_InFuse;
+        poseInFuseRequest   = new Pose_InFuse;
+
+        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
+        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+    }
+
+    TokamakASN1::TokamakASN1(int32_t freq): Tokamak(freq)
+    {
+        poseInFuseInsert    = new Pose_InFuse;
+        poseInFuseRespond   = new Pose_InFuse;
+        poseInFusePublish   = new Pose_InFuse;
+        poseInFuseRequest   = new Pose_InFuse;
+
+        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
+        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+    }
+    
+    TokamakASN1::TokamakASN1(int32_t freq, int32_t sec): Tokamak(freq,sec)
+    {
+        poseInFuseInsert    = new Pose_InFuse;
+        poseInFuseRespond   = new Pose_InFuse;
+        poseInFusePublish   = new Pose_InFuse;
+        poseInFuseRequest   = new Pose_InFuse;
+
+        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
+        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+    }
+
+    TokamakASN1::TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame): Tokamak(freq,sec,worldFrame)
+    {
+        poseInFuseInsert    = new Pose_InFuse;
+        poseInFuseRespond   = new Pose_InFuse;
+        poseInFusePublish   = new Pose_InFuse;
+        poseInFuseRequest   = new Pose_InFuse;
+
+        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
+        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+    }
+
+    TokamakASN1::TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame): Tokamak(freq,sec,worldFrame,robotFrame)
     {
         poseInFuseInsert    = new Pose_InFuse;
         poseInFuseRespond   = new Pose_InFuse;
@@ -82,7 +126,7 @@ namespace tokamak{
         }
     }
     
-    void TokamakASN1::decode_insertPose(BitStream &msg,PositionManager::Pose& poseToDecode)
+    bool TokamakASN1::decode_insertPose(BitStream &msg,PositionManager::Pose& poseToDecode)
     {
         int errorCode;
         try 
@@ -100,9 +144,10 @@ namespace tokamak{
         {
             std::cerr << "[DECODING FAILED]: " << e.what() << std::endl;
         }
+        return true;
     }
     
-    void TokamakASN1::decode_request(BitStream &msg, PositionManager::Pose& poseToDecode)
+    bool TokamakASN1::decode_request(BitStream &msg, PositionManager::Pose& poseToDecode)
     {
         int errorCode;
         try 
@@ -120,6 +165,7 @@ namespace tokamak{
         {
             std::cerr << "[DECODING FAILED]: " << e.what() << std::endl;
         }
+        return true;
     }
 
 };
