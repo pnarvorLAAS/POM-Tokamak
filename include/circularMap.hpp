@@ -11,36 +11,81 @@ using namespace std;
 
 namespace tokamak
 {
-    #define DEFAULT_SIZE 10000
-    
+#define DEFAULT_SIZE 10000
+
     template <typename K, typename V>
-    class circularMap
-    {
-    	    typedef map<K,V> map_t;
-    	    typedef deque<K> deque_t;
-    
+        class circularMap
+        {
+            typedef map<K,V> map_t;
+            typedef deque<K> deque_t;
+
             typedef typename std::map<K,V>::iterator iterator;
-    
-        private:
-    
-    	    map_t map_;
-    	    deque_t deque_;
-            int size;
-    
-    	    void _ensure(); 
-    
-        public:
-    
-            circularMap();
-            circularMap(int size);
-    	    iterator begin();
-            iterator end();
-            iterator find_upper(K key);
-            iterator find_lower(K key);
-            iterator find(K key);
-            bool empty();
-    	    void put(K k, V v);
-    };
+
+            private:
+
+            map_t map_;
+            deque_t deque_;
+            unsigned int size;
+
+            void _ensure()
+            {
+                if (deque_.size() > this->size) 
+                { 
+                    map_.erase(deque_.front()); 
+                    deque_.pop_front();
+                }
+            }
+
+            public:
+
+            circularMap()
+            {
+                this->size = DEFAULT_SIZE;
+            }
+            circularMap(int size)
+            {
+                this->size = size;
+            }
+            iterator begin()
+            {
+                return map_.begin(); 
+            }
+            iterator end()
+            {
+                return map_.end();
+            }
+            iterator find_upper(K key)
+            {
+                return map_.upper_bound(key);
+            }
+            iterator find_lower(K key)
+            {
+                return map_.lower_bound(key);
+            }
+            iterator find(K key)
+            {
+                return map_.find(key);
+            }
+            bool empty()
+            {
+                return map_.empty();
+            }
+            void put(K k, V v)
+            { 
+                map_.insert(std::make_pair(k,v));
+                deque_.push_back(k);
+                _ensure();  
+            }
+
+            void print()
+            {
+                for (iterator it = map_.begin(); it != map_.end(); it++)
+                {
+                    std::cout << it->first <<", ";
+                }
+                std::cout << std::endl;
+            }
+        };
 }
 
 #endif
