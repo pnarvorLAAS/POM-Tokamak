@@ -120,6 +120,8 @@ namespace tokamak
             }
             else
             {
+                std::cout << "Parent Frame is not right" << std::endl;
+                throw e_wrong_frames;
                 //TODO: set the transform in the right frame of reference (if possible). But this
                 //will depend on how we add a way for PoM to know which frames exist
             }

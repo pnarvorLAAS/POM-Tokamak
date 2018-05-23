@@ -55,6 +55,7 @@ namespace tokamak
             Tokamak(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame);
             ~Tokamak();
             void clean_up(); // Release memory allocated by instanciating tokamak
+            void print_buffer(){timeLine->print();}
 
             //TODO Add a way for PoM to know which frames exist --> URDF/XML => Format à définir 
             void validityCheckInsertion(const PositionManager::Pose transform);
