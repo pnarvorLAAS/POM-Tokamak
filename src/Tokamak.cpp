@@ -183,14 +183,18 @@ namespace tokamak
         try
         {
             // Case where transform goes from future to past
-            if (parentTime < childTime)
+            if (parentTime > childTime)
             {
                 //TODO Treat this directly with inversion of transform
+                std::cout << "Child time is: " << childTime << std::endl;
+                std::cout << "Parent time is: " << parentTime << std::endl;
                 throw e_inverse_time_transform;
             }
 
             if (childFrame != robotBodyFrame)
             {
+                std::cout << "Child frame is :" << childFrame;
+                std::cout << " while robot frame is : " << robotBodyFrame << std::endl;
                 throw e_wrong_frames;
             }
 
@@ -209,7 +213,7 @@ namespace tokamak
         }
         catch (std::exception const &e)
         {
-            std::cerr << "[VALIDITY CHECK FOR TRANSFORM REQUEST FAILED: ] " << std::endl;
+            std::cerr << "[VALIDITY CHECK FOR TRANSFORM REQUEST FAILED: ] " << e.what() <<  std::endl;
         }
     }
 
@@ -225,11 +229,11 @@ namespace tokamak
         poseRespond._child = childFrame;
         poseRespond._parentTime = parentTime;
         poseRespond._childTime = childTime;
+        validityCheckGetTransform(parentTime,childTime,parentFrame,childFrame);
         /* Validity checks */
         try
         {
             
-            validityCheckGetTransform(parentTime,childTime,parentFrame,childFrame);
             lockTimeLine();
             
             iterator child = timeLine->find_lower(childTime);
