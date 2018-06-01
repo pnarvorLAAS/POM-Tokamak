@@ -52,6 +52,17 @@ namespace tokamak
         delete timeLine;
     }
 
+    bool readFixedFrame(std::string pathToUrdf)
+    {
+        UrdfParser parser;
+        if (!parser.parseURDF(pathToUrdf)
+        {
+            std::cout << "Can't parse File" << std::endl;
+        }
+
+
+    }
+
     void Tokamak::validityCheckInsertion(const PositionManager::Pose transform)
     {
 

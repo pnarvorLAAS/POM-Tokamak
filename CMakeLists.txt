@@ -8,11 +8,12 @@ SET(SOURCES
 
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-target_link_libraries(${PROJECT_NAME} ${ENVIRE_LIBRARIES} asn1_pom_conversions cdff_types ) 
+target_link_libraries(${PROJECT_NAME} ${ENVIRE_LIBRARIES} asn1_pom_conversions cdff_types pom-base) 
 
 add_dependencies( ${PROJECT_NAME}
     asn1_pom_conversions
     cdff_types
+    pom-base
     )
 
 

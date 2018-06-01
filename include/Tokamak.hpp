@@ -5,6 +5,7 @@
 #include <StateOfTransform.hpp>
 #include <exception.hpp>
 #include <circularMap.hpp>
+#include <UrdfParser.hpp>
 #include <vector>
 #include <mutex>
 
@@ -57,7 +58,7 @@ namespace tokamak
             void clean_up(); // Release memory allocated by instanciating tokamak
             void print_buffer(){timeLine->print();}
 
-            //TODO Add a way for PoM to know which frames exist --> URDF/XML => Format à définir 
+            bool readFixedFrame(std::string pathToUrdf);
             void validityCheckInsertion(const PositionManager::Pose transform);
             bool insertNewTransform(PositionManager::Pose transform /*,timeLine*/);
             bool insertNewTransforms(std::vector<PositionManager::Pose>& listOfTransforms /*, timeLine*/);
