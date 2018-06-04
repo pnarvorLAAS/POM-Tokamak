@@ -52,15 +52,48 @@ namespace tokamak
         delete timeLine;
     }
 
-    bool readFixedFrame(std::string pathToUrdf)
+    bool Tokamak::readFixedFrames(std::string pathToUrdf)
     {
-        UrdfParser parser;
-        if (!parser.parseURDF(pathToUrdf)
+        PositionManager::UrdfParser parser;
+        try
         {
-            std::cout << "Can't parse File" << std::endl;
+            if (!parser.parseURDF(pathToUrdf))
+            {
+                throw e_urdf;
+            }
         }
 
+        catch (std::exception const &e)
+        {
+            std::cout << "[URDF parsing failed]: " << e.what() << std::endl;
+            return false;
+        }
 
+        for(list<PositionManager::FrameId>::iterator it = parser._frameIds.begin(); it != parser._frameIds.end(); ++it)
+        {
+            fixedFramesGraph.addFrame(*it);
+        }
+
+        for(list<PositionManager::Pose>::iterator it = parser._poses.begin(); it != parser._poses.end(); ++it)
+        {
+            fixedFramesGraph.addTransform(it->_parent, it->_child, it->_tr);
+        }
+
+        return true;
+    }
+    
+    bool Tokamak::getFixedTransform(const PositionManager::FrameId& parent)
+    {
+        try
+        {
+            fixedTransform._tr = fixedFramesGraph.getTransform(parent,robotBodyFrame);
+        }
+        catch (std::exception const & e)
+        {
+            std::cout << "[GetFixedFrame failed]: " << e.what() << std::endl;
+            return false;
+        }
+        return true;
     }
 
     void Tokamak::validityCheckInsertion(const PositionManager::Pose transform)
@@ -91,8 +124,13 @@ namespace tokamak
                 throw e_static_transform;
             }
 
-            // TODO add a case to check if parent frame is known (be it robot body frame but also any other world fixed frame)
-
+            if (parentFrame != fixedFrame)
+            {
+                if (!fixedFramesGraph.containsFrame(parentFrame))
+                {
+                    throw e_wrong_frames;
+                }
+            }
         }
         catch (std::exception const& e)
         {
@@ -131,10 +169,9 @@ namespace tokamak
             }
             else
             {
-                std::cout << "Parent Frame is not right" << std::endl;
-                throw e_wrong_frames;
-                //TODO: set the transform in the right frame of reference (if possible). But this
-                //will depend on how we add a way for PoM to know which frames exist
+                PositionManager::Transform fixedFrame_worldFrame = fixedFramesGraph.getTransform(fixedFrame,transform._parent);
+                PositionManager::Transform fixedFrame_robotFrame = fixedFrame_worldFrame * transform._tr;
+                tfState.pose_fixedFrame_robotFrame._tr = fixedFrame_robotFrame;
             }
 
             // Add to timeLine
