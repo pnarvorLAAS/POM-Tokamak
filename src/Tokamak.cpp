@@ -145,8 +145,16 @@ namespace tokamak
         tfState.fused = false;
         tfState.flagged = 0;
 
+        // All transforms inserted in the timeline are fixedFrame -> robotBodyFrame
+        tfState.pose_fixedFrame_robotFrame._parent = fixedFrame;
+        tfState.pose_fixedFrame_robotFrame._child = robotBodyFrame;
+        tfState.pose_fixedFrame_robotFrame._childTime = transform._childTime;
+        tfState.pose_fixedFrame_robotFrame._parentTime = transform._childTime;
+
         // Time of addition inside the timeLine
-        tfState.timeofAddition = PositionManager::TimeManager::now();
+        tfState.timeOfAddition = PositionManager::TimeManager::now();
+
+        std::cout << "Entering insertion function" << std::endl;
 
         try
         {
@@ -155,11 +163,13 @@ namespace tokamak
             // Case delta pose
             if (transform._parent == transform._child)
             {
-
-                PositionManager::Transform fixedFrame_robotFrame_parentTime = timeLine_find(transform._parentTime).pose_fixedFrame_robotFrame._tr;
+                StateOfTransform tfParent = timeLine_find(transform._parentTime);
+                PositionManager::Transform fixedFrame_robotFrame_parentTime = tfParent.pose_fixedFrame_robotFrame._tr;
 
                 PositionManager::Transform fixedFrame_robotFrame_childTime = fixedFrame_robotFrame_parentTime * transform._tr;
                 tfState.pose_fixedFrame_robotFrame._tr = fixedFrame_robotFrame_childTime;
+                tfState.isDeltaPose = true;
+                tfState.timeOfParent = transform._parentTime;
             }
 
             // Case Normal pose
@@ -228,50 +238,43 @@ namespace tokamak
                                                         timeLine
                                                        */)
          {
-             try
+             // Case where transform goes from future to past
+             if (parentTime > childTime)
              {
-                 // Case where transform goes from future to past
-                 if (parentTime > childTime)
-                 {
-                     //TODO Treat this directly with inversion of transform
-                     std::cout << "Child time is: " << childTime << std::endl;
-                     std::cout << "Parent time is: " << parentTime << std::endl;
-                     throw e_inverse_time_transform;
-                 }
+                 //TODO Treat this directly with inversion of transform
+                 std::cout << "Child time is: " << childTime << std::endl;
+                 std::cout << "Parent time is: " << parentTime << std::endl;
+                 throw e_inverse_time_transform;
+             }
 
-                 if (childFrame != robotBodyFrame)
+             if (childFrame != robotBodyFrame)
+             {
+                 std::cout << "Child frame is :" << childFrame;
+                 std::cout << " while robot frame is : " << robotBodyFrame << std::endl;
+                 throw e_wrong_frames;
+             }
+
+             // Case where the parentFrame is unknown
+             if (parentFrame != robotBodyFrame && parentFrame != fixedFrame)
+             {
+                 if (!fixedFramesGraph.containsFrame(parentFrame))
                  {
-                     std::cout << "Child frame is :" << childFrame;
-                     std::cout << " while robot frame is : " << robotBodyFrame << std::endl;
                      throw e_wrong_frames;
                  }
-
-                 // Case where the parentFrame is unknown
-                 if (parentFrame != robotBodyFrame && parentFrame != fixedFrame)
-                 {
-                     if (!fixedFramesGraph.containsFrame(parentFrame))
-                     {
-                         throw e_wrong_frames;
-                     }
-                 }
-
-                 // Case of a "non-transform" : same times and same frames
-                 if (parentTime == childTime && parentFrame == childFrame)
-                 {
-                     throw e_static_transform;
-                 }
-                 // Case where parent is unknown
-                 if (parentFrame != fixedFrame)
-                 {
-                     if (!fixedFramesGraph.containsFrame(parentFrame))
-                     {
-                         throw e_wrong_frames;
-                     }
-                 }
              }
-             catch (std::exception const &e)
+
+             // Case of a "non-transform" : same times and same frames
+             if (parentTime == childTime && parentFrame == childFrame)
              {
-                 std::cerr << "[VALIDITY CHECK FOR TRANSFORM REQUEST FAILED: ] " << e.what() <<  std::endl;
+                 throw e_static_transform;
+             }
+             // Case where parent is unknown
+             if (parentFrame != fixedFrame)
+             {
+                 if (!fixedFramesGraph.containsFrame(parentFrame))
+                 {
+                     throw e_wrong_frames;
+                 }
              }
          }
 
@@ -288,76 +291,57 @@ namespace tokamak
             poseRespond._parentTime = parentTime;
             poseRespond._childTime = childTime;
             validityCheckGetTransform(parentTime,childTime,parentFrame,childFrame);
-            /* Validity checks */
-            try
+
+            lockTimeLine();
+
+            iterator child = timeLine->find_lower(childTime);
+            iterator parent = timeLine->find_lower(parentTime);
+
+            // Case where parent is in the future
+            if (parent == timeLine->end())
             {
-
-                lockTimeLine();
-
-                iterator child = timeLine->find_lower(childTime);
-                iterator parent = timeLine->find_lower(parentTime);
-
-                // Case where parent is in the future
-                if (parent == timeLine->end())
-                {
-                    throw e_future_transform;
-                }
-
-                // Case where child is in the future
-                if (child == timeLine->end() && childTime !=  child->first)
-                {
-                    throw e_future_transform;
-                }
-
-                // Case where timestamps asked are not exactly in memory at the moment: this case requires interpolation
-                if (childTime != child->first || parentTime != parent->first)
-                {
-                    //TODO
-                    throw e_interpolation;
-                }
-
                 unlockTimeLine();
+                throw e_future_transform;
             }
-            catch (std::exception const& e)
+
+            // Case where child is in the future
+            if (child == timeLine->end() && childTime !=  child->first)
             {
-                std::cerr << "[VALIDITY CHECK FAILED]: " << e.what() << std::endl;
+                unlockTimeLine();
+                throw e_future_transform;
             }
+
+            // Case where timestamps asked are not exactly in memory at the moment: this case requires interpolation
+            if (childTime != child->first || parentTime != parent->first)
+            {
+                //TODO
+                unlockTimeLine();
+                throw e_interpolation;
+            }
+
+            unlockTimeLine();
 
             /* Case delta pose */ 
-            try
-            {
 
-                if (parentFrame == childFrame) // Delta pose
-                {
-                    PositionManager::Transform robotFrame_fixedFrame_parent = timeLine_find(parentTime).pose_fixedFrame_robotFrame._tr;
-                    PositionManager::Transform robotFrame_fixedFrame_child = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
-                    PositionManager::Transform robotFrame_parent_child = robotFrame_fixedFrame_parent.inverse() * robotFrame_fixedFrame_child;
-                    poseRespond._tr = robotFrame_parent_child;
-                }
-            }
-            catch (std::exception const& e)
+            if (parentFrame == childFrame) // Delta pose
             {
-                std::cerr  << "[DELTA POSE CHECK FAILED]: " << e.what() << std::endl;
+                PositionManager::Transform robotFrame_fixedFrame_parent = timeLine_find(parentTime).pose_fixedFrame_robotFrame._tr;
+                PositionManager::Transform robotFrame_fixedFrame_child = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
+                PositionManager::Transform robotFrame_parent_child = robotFrame_fixedFrame_parent.inverse() * robotFrame_fixedFrame_child;
+                poseRespond._tr = robotFrame_parent_child;
             }
 
             /* Case normal pose */
-            try
+            if (parentFrame == fixedFrame)
             {
-                if (parentFrame == fixedFrame)
-                {
-                    poseRespond._tr = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
-                }
-                else 
-                {
-                    PositionManager::Transform parentFrame_robotFrame = fixedFramesGraph.getTransform(parentFrame,robotBodyFrame);
-                    poseRespond._tr = parentFrame_robotFrame * timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
-                }
+                poseRespond._tr = timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
+            }
+            else 
+            {
+                PositionManager::Transform parentFrame_robotFrame = fixedFramesGraph.getTransform(parentFrame,robotBodyFrame);
+                poseRespond._tr = parentFrame_robotFrame * timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
+            }
 
-            }
-            catch (std::exception const &e)
-            {
-                std::cerr << "[POSE REQUEST FAILED]: " << e.what() << std::endl;
-            }
             return poseRespond;
         }
 

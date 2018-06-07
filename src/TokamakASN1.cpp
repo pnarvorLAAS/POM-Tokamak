@@ -129,6 +129,7 @@ namespace tokamak{
     bool TokamakASN1::decode_insertPose(BitStream &msg,PositionManager::Pose& poseToDecode)
     {
         int errorCode;
+        std::cout << "Trying to decode insertion pose" << std::endl;
         try 
         {
             if (!Pose_InFuse_Decode(poseInFuseInsert,&msg,&errorCode))
