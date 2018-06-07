@@ -9,7 +9,9 @@ namespace tokamak
     {
         bool fused;
         int flagged;
-        PositionManager::TimeUs timeofAddition;
+        bool isDeltaPose;
+        PositionManager::TimeUs timeOfAddition;
+        PositionManager::TimeUs timeOfParent;
         PositionManager::Pose pose_fixedFrame_robotFrame;
     };
 }
