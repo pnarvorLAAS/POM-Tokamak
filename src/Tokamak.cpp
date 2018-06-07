@@ -338,8 +338,8 @@ namespace tokamak
             }
             else 
             {
-                PositionManager::Transform parentFrame_robotFrame = fixedFramesGraph.getTransform(parentFrame,robotBodyFrame);
-                poseRespond._tr = parentFrame_robotFrame * timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
+                PositionManager::Transform parentFrame_fixedFrame= fixedFramesGraph.getTransform(parentFrame,fixedFrame);
+                poseRespond._tr = parentFrame_fixedFrame * timeLine_find(childTime).pose_fixedFrame_robotFrame._tr;
             }
 
             return poseRespond;
