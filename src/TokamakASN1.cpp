@@ -4,38 +4,25 @@ namespace tokamak{
 
     TokamakASN1::TokamakASN1(): Tokamak()
     {
-        poseInFuseInsert    = new Pose_InFuse;
-        poseInFuseRespond   = new Pose_InFuse;
-        poseInFusePublish   = new Pose_InFuse;
-        poseInFuseRequest   = new Pose_InFuse;
-
-        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
-        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        init();
     }
 
     TokamakASN1::TokamakASN1(int32_t freq): Tokamak(freq)
     {
-        poseInFuseInsert    = new Pose_InFuse;
-        poseInFuseRespond   = new Pose_InFuse;
-        poseInFusePublish   = new Pose_InFuse;
-        poseInFuseRequest   = new Pose_InFuse;
-
-        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
-        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        init();
     }
     
     TokamakASN1::TokamakASN1(int32_t freq, int32_t sec): Tokamak(freq,sec)
     {
-        poseInFuseInsert    = new Pose_InFuse;
-        poseInFuseRespond   = new Pose_InFuse;
-        poseInFusePublish   = new Pose_InFuse;
-        poseInFuseRequest   = new Pose_InFuse;
-
-        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
-        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        init();
     }
 
     TokamakASN1::TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame): Tokamak(freq,sec,worldFrame)
+    {
+        init();
+    }
+
+    void TokamakASN1::init()
     {
         poseInFuseInsert    = new Pose_InFuse;
         poseInFuseRespond   = new Pose_InFuse;
