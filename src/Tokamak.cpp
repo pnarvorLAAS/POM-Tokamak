@@ -113,7 +113,7 @@ namespace tokamak
             }
 
             // Case where the transform we want to insert is not from the robot
-            if (transform._child != robotBodyFrame)
+            if (childFrame.compare(robotBodyFrame) != 0)
             {
                 throw e_wrong_childframe;
             }
@@ -155,10 +155,10 @@ namespace tokamak
         tfState.timeOfAddition = PositionManager::TimeManager::now();
 
         std::cout << "Entering insertion function" << std::endl;
+        validityCheckInsertion(transform);
 
         try
         {
-            validityCheckInsertion(transform);
 
             // Case delta pose
             if (transform._parent == transform._child)
@@ -220,7 +220,7 @@ namespace tokamak
             {
                 throw e_no_publish;
             }
-            posePublish = timeLine->end()->second.pose_fixedFrame_robotFrame;
+            posePublish = timeLine->last_element()->second.pose_fixedFrame_robotFrame;
             unlockTimeLine();
         }
         catch (std::exception const &e)
@@ -298,14 +298,14 @@ namespace tokamak
             iterator parent = timeLine->find_lower(parentTime);
 
             // Case where parent is in the future
-            if (parent == timeLine->end())
+            if (parent == timeLine->last_element())
             {
                 unlockTimeLine();
                 throw e_future_transform;
             }
 
             // Case where child is in the future
-            if (child == timeLine->end() && childTime !=  child->first)
+            if (child == timeLine->last_element() && childTime !=  child->first)
             {
                 unlockTimeLine();
                 throw e_future_transform;
