@@ -82,8 +82,8 @@ namespace tokamak
             PositionManager::Pose getTransform(PositionManager::Pose pose/*,timeLine,poseRequest*/);
 
             PositionManager::Pose getTransform(
-                                        const PositionManager::TimeUs parentTime, 
-                                        const PositionManager::TimeUs childTime, 
+                                        PositionManager::TimeUs parentTime, 
+                                        PositionManager::TimeUs childTime, 
                                         const PositionManager::FrameId parentFrame, 
                                         const PositionManager::FrameId childFrame /*,
                                         timeLine,
@@ -92,7 +92,7 @@ namespace tokamak
                                         );
 
             PositionManager::Pose getTransform(
-                                        const PositionManager::TimeUs time,
+                                        PositionManager::TimeUs time,
                                         const PositionManager::FrameId parentFrame,
                                         const PositionManager::FrameId childFrame /*,
                                         timeLine,
@@ -101,8 +101,8 @@ namespace tokamak
                                         );
 
             PositionManager::Pose getTransform(
-                                        const PositionManager::TimeUs parentTime,
-                                        const PositionManager::TimeUs childTime,
+                                        PositionManager::TimeUs parentTime,
+                                        PositionManager::TimeUs childTime,
                                         const PositionManager::FrameId frame /*,
                                         timeLine,
                                         poseRequest

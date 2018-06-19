@@ -279,8 +279,8 @@ namespace tokamak
          }
 
     PositionManager::Pose Tokamak::getTransform(
-            const PositionManager::TimeUs parentTime,
-            const PositionManager::TimeUs childTime,
+            PositionManager::TimeUs parentTime,
+            PositionManager::TimeUs childTime,
             const PositionManager::FrameId parentFrame,
             const PositionManager::FrameId childFrame /*,
                                                         timeLine
@@ -312,11 +312,49 @@ namespace tokamak
             }
 
             // Case where timestamps asked are not exactly in memory at the moment: this case requires interpolation
-            if (childTime != child->first || parentTime != parent->first)
+            if (childTime != child->first )
             {
-                //TODO
-                unlockTimeLine();
-                throw e_interpolation;
+                std::cout << "The requested child time necessitates interpolation. It has not been implemented yet. Closest transform in time will be provided" << std::endl;
+                if (std::abs(child->first- childTime) > std::abs(std::prev(child)->first - childTime))
+                {
+                    if (parentTime == childTime)
+                    {
+                        parentTime = std::prev(child)->first;
+                    }
+                    childTime = std::prev(child)->first;
+                    
+                }
+                else
+                {
+                    if (parentTime == childTime)
+                    {
+                        parentTime = child->first;
+                    }
+                    childTime = child->first;
+                }
+
+            }
+
+            if (parentTime != parent->first && parentTime != childTime )
+            {
+                std::cout << "The requested parent time necessitates interpolation. It has not been implemented yet. Closest transform in time will be provided" << std::endl;
+                if (std::abs(parent->first- parentTime) > std::abs(std::prev(parent)->first - parentTime))
+                {
+                    if (parentTime == childTime)
+                    {
+                        parentTime = std::prev(child)->first;
+                    }
+                    childTime = std::prev(child)->first;
+                    
+                }
+                else
+                {
+                    if (parentTime == childTime)
+                    {
+                        parentTime = child->first;
+                    }
+                    childTime = child->first;
+                }
             }
 
             unlockTimeLine();
@@ -351,7 +389,7 @@ namespace tokamak
     }
 
     PositionManager::Pose Tokamak::getTransform(
-            const PositionManager::TimeUs time,
+            PositionManager::TimeUs time,
             const PositionManager::FrameId parentFrame,
             const PositionManager::FrameId childFrame /*,
                                                         timeLine
@@ -361,8 +399,8 @@ namespace tokamak
         }
 
     PositionManager::Pose Tokamak::getTransform(
-            const PositionManager::TimeUs parentTime,
-            const PositionManager::TimeUs childTime,
+            PositionManager::TimeUs parentTime,
+            PositionManager::TimeUs childTime,
             const PositionManager::FrameId frame /*,
                                                    timeLine
                                                   */)
