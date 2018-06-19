@@ -50,6 +50,12 @@ namespace tokamak
             {
                 return map_.begin(); 
             }
+
+            iterator last_element()
+            {
+                return std::prev(map_.end());
+            }
+
             iterator end()
             {
                 return map_.end();
