@@ -52,6 +52,29 @@ namespace tokamak
         delete timeLine;
     }
 
+
+    bool Tokamak::setAbsolutePose(double x, double y, double z, double phi,std::string absoluteFrameId)
+    {
+        //Creation of the Pose to insert
+
+        PositionManager::Pose absPose;
+        absPose._tr.transform.cov = 1e-6*base::Matrix6d::Identity();
+        absPose._tr.transform.orientation =  base::Quaterniond(base::AngleAxisd(phi,base::Vector3d::UnitZ()));
+        absPose._tr.transform.translation(0) = x;
+        absPose._tr.transform.translation(1) = y;
+        absPose._tr.transform.translation(2) = z;
+
+        absPose._parent = absoluteFrameId;
+        absPose._child = robotBodyFrame;
+
+        absPose._parentTime = PositionManager::TimeManager::now();
+
+        //Insertion of the Pose inside the timeLine
+
+        return insertNewTransform(absPose);
+	
+    }
+
     bool Tokamak::readFixedFrames(std::string pathToUrdf)
     {
         PositionManager::UrdfParser parser;
@@ -213,20 +236,14 @@ namespace tokamak
 
     PositionManager::Pose Tokamak::getLatestRobotPose()
     {
-        try
+        lockTimeLine();
+        if (timeLine->empty())
         {
-            lockTimeLine();
-            if (timeLine->empty())
-            {
-                throw e_no_publish;
-            }
-            posePublish = timeLine->last_element()->second.pose_fixedFrame_robotFrame;
             unlockTimeLine();
+            throw e_no_publish;
         }
-        catch (std::exception const &e)
-        {
-            cerr << "[CANNOT PUBLISH POSE: ]" << e.what() << std::endl;
-        }
+        posePublish = timeLine->last_element()->second.pose_fixedFrame_robotFrame;
+        unlockTimeLine();
         return posePublish;
     }
 
