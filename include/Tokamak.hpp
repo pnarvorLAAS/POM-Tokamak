@@ -63,7 +63,7 @@ namespace tokamak
             void clean_up(); // Release memory allocated by instanciating tokamak
             void print_buffer(){timeLine->print();}
 
-            bool setAbsolutePose(double x, double y, double z, double phi, std::string absoluteFrameId); // Set the heading from GPS data.
+            bool setAbsolutePose(double& x, double& y, double& z, double& phi, std::string& absoluteFrameId); // Set the heading from GPS data.
 
             bool readFixedFrames(std::string pathToUrdf);
             bool getFixedTransform(const PositionManager::FrameId& parent); // Get Transform from world fixed frame to robot body frame

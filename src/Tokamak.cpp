@@ -53,7 +53,7 @@ namespace tokamak
     }
 
 
-    bool Tokamak::setAbsolutePose(double x, double y, double z, double phi,std::string absoluteFrameId)
+    bool Tokamak::setAbsolutePose(double& x, double& y, double& z, double& phi,std::string& absoluteFrameId)
     {
         //Creation of the Pose to insert
 
