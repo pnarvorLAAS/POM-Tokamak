@@ -68,6 +68,7 @@ namespace tokamak
         absPose._child = robotBodyFrame;
 
         absPose._parentTime = PositionManager::TimeManager::now();
+        absPose._childTime = PositionManager::TimeManager::now();
 
         //Insertion of the Pose inside the timeLine
 
@@ -209,7 +210,7 @@ namespace tokamak
         // Time of addition inside the timeLine
         tfState.timeOfAddition = PositionManager::TimeManager::now();
 
-        std::cout << "Entering insertion function" << std::endl;
+        //std::cout << "Entering insertion function" << std::endl;
         validityCheckInsertion(transform);
 
         try
