@@ -105,11 +105,18 @@ namespace tokamak
         return true;
     }
 
+    bool Tokamak::addFixedFrame(const PositionManager::Pose& transform)
+    {
+        fixedFramesGraph.addFrame(transform._child);
+        fixedFramesGraph.addTransform(transform._parent,transform._child,transform._tr);
+        return true;
+    }
+
     bool Tokamak::getFixedTransform(const PositionManager::FrameId& parent)
     {
         try
         {
-            fixedTransform._tr = fixedFramesGraph.getTransform(parent,robotBodyFrame);
+            fixedTransform._tr = fixedFramesGraph.getTransform(fixedFrame,parent);
         }
         catch (std::exception const & e)
         {
@@ -118,6 +125,31 @@ namespace tokamak
         }
         return true;
     }
+
+    bool Tokamak::convertTransform(PositionManager::Pose & pose)
+    {
+        //TO BE CHECKED
+        if (pose._parent == fixedFrame)
+        {
+            return true;
+        }
+
+        if (!getFixedTransform(pose._parent))
+        {
+            return false;
+        }
+
+        else
+        {
+            pose._tr = pose._tr * fixedTransform._tr;
+        }
+        pose._parent = fixedFrame;
+        pose._child = robotBodyFrame;
+        return true;
+    }
+
+
+
 
     void Tokamak::validityCheckInsertion(const PositionManager::Pose transform)
     {

@@ -66,7 +66,10 @@ namespace tokamak
             bool setAbsolutePose(double& x, double& y, double& z, double& phi, std::string& absoluteFrameId); // Set the heading from GPS data.
 
             bool readFixedFrames(std::string pathToUrdf);
+            bool addFixedFrame(const PositionManager::Pose& transform);
             bool getFixedTransform(const PositionManager::FrameId& parent); // Get Transform from world fixed frame to robot body frame
+            bool convertTransform(PositionManager::Pose& pose); // Convert given robot pose to robot pose in fixed frame
+
             void validityCheckInsertion(const PositionManager::Pose transform);
             bool insertNewTransform(PositionManager::Pose transform /*,timeLine*/);
             bool insertNewTransforms(std::vector<PositionManager::Pose>& listOfTransforms /*, timeLine*/);
