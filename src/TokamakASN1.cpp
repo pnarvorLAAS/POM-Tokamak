@@ -94,12 +94,13 @@ namespace tokamak{
     
     void TokamakASN1::encode_response(BitStream &b)
     {
+
         //Convert the pose to publish from internal to ASN1 C type
         toASN1SCC(poseRespond,*poseInFuseRespond);
 
         //Convert the pose to publish from ASN1 C type to ASN1 BitStream
         int errorCode;
-        BitStream_Init(&b,perBuffer,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        //BitStream_Init(&b,perBuffer,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
         try
         {
             if (!Pose_InFuse_Encode(poseInFuseRespond,&b,&errorCode,TRUE))
@@ -153,6 +154,7 @@ namespace tokamak{
         {
             std::cerr << "[DECODING FAILED]: " << e.what() << std::endl;
         }
+
         return true;
     }
 
