@@ -1,4 +1,4 @@
-#include <TokamakASN1.hpp>
+#include <infuse_pom_tokamak/TokamakASN1.hpp>
 
 namespace tokamak{
 
@@ -24,24 +24,24 @@ namespace tokamak{
 
     void TokamakASN1::init()
     {
-        poseInFuseInsert    = new Pose_InFuse;
-        poseInFuseRespond   = new Pose_InFuse;
-        poseInFusePublish   = new Pose_InFuse;
-        poseInFuseRequest   = new Pose_InFuse;
+        poseInFuseInsert    = new asn1SccTransformWithCovariance;
+        poseInFuseRespond   = new asn1SccTransformWithCovariance;
+        poseInFusePublish   = new asn1SccTransformWithCovariance;
+        poseInFuseRequest   = new asn1SccTransformWithCovariance;
 
-        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
-        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        perBuffer = new byte[asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING];
+        memset(perBuffer,0,asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING);
     }
 
     TokamakASN1::TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame): Tokamak(freq,sec,worldFrame,robotFrame)
     {
-        poseInFuseInsert    = new Pose_InFuse;
-        poseInFuseRespond   = new Pose_InFuse;
-        poseInFusePublish   = new Pose_InFuse;
-        poseInFuseRequest   = new Pose_InFuse;
+        poseInFuseInsert    = new asn1SccTransformWithCovariance;
+        poseInFuseRespond   = new asn1SccTransformWithCovariance;
+        poseInFusePublish   = new asn1SccTransformWithCovariance;
+        poseInFuseRequest   = new asn1SccTransformWithCovariance;
 
-        perBuffer = new byte[Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING];
-        memset(perBuffer,0,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        perBuffer = new byte[asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING];
+        memset(perBuffer,0,asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING);
     }
 
     TokamakASN1::~TokamakASN1()
@@ -59,13 +59,13 @@ namespace tokamak{
         delete poseInFuseRequest;
     }
 
-    Pose_InFuse TokamakASN1::update_publish()
+    asn1SccTransformWithCovariance TokamakASN1::update_publish()
     {
         toASN1SCC(posePublish,*poseInFusePublish);
         return *poseInFusePublish;
     }
 
-    Pose_InFuse TokamakASN1::update_respond()
+    asn1SccTransformWithCovariance TokamakASN1::update_respond()
     {
         toASN1SCC(poseRespond,*poseInFuseRespond);
         return *poseInFuseRespond;
@@ -78,10 +78,10 @@ namespace tokamak{
 
         //Convert the pose to publish from ASN1 C type to ASN1 BitStream
         int errorCode;
-        BitStream_Init(&b,perBuffer,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        BitStream_Init(&b,perBuffer,asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING);
         try
         {
-            if (!Pose_InFuse_Encode(poseInFusePublish,&b,&errorCode,TRUE))
+            if (!asn1SccTransformWithCovariance_Encode(poseInFusePublish,&b,&errorCode,TRUE))
             {
                 throw e_asn1;
             }
@@ -100,10 +100,10 @@ namespace tokamak{
 
         //Convert the pose to publish from ASN1 C type to ASN1 BitStream
         int errorCode;
-        //BitStream_Init(&b,perBuffer,Pose_InFuse_REQUIRED_BYTES_FOR_ENCODING);
+        //BitStream_Init(&b,perBuffer,asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING);
         try
         {
-            if (!Pose_InFuse_Encode(poseInFuseRespond,&b,&errorCode,TRUE))
+            if (!asn1SccTransformWithCovariance_Encode(poseInFuseRespond,&b,&errorCode,TRUE))
             {
                 throw e_asn1;
             }
@@ -120,7 +120,7 @@ namespace tokamak{
         //std::cout << "Trying to decode insertion pose" << std::endl;
         try 
         {
-            if (!Pose_InFuse_Decode(poseInFuseInsert,&msg,&errorCode))
+            if (!asn1SccTransformWithCovariance_Decode(poseInFuseInsert,&msg,&errorCode))
             {
                 throw e_asn1;
             }
@@ -141,7 +141,7 @@ namespace tokamak{
         int errorCode;
         try 
         {
-            if (!Pose_InFuse_Decode(poseInFuseRequest,&msg,&errorCode))
+            if (!asn1SccTransformWithCovariance_Decode(poseInFuseRequest,&msg,&errorCode))
             {
                 throw e_asn1;
             }

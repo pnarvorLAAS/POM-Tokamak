@@ -1,11 +1,12 @@
 #ifndef __TOKAMAK_HPP__
 #define __TOKAMAK_HPP__
 
-#include <PositionManagerBase.hpp>
-#include <StateOfTransform.hpp>
-#include <exception.hpp>
-#include <circularMap.hpp>
-#include <UrdfParser.hpp>
+#include <infuse_pom_base/PositionManagerBase.hpp>
+#include <infuse_pom_base/UrdfParser.hpp>
+
+#include <infuse_pom_tokamak/StateOfTransform.hpp>
+#include <infuse_pom_tokamak/exception.hpp>
+#include <infuse_pom_tokamak/circularMap.hpp>
 #include <vector>
 #include <mutex>
 

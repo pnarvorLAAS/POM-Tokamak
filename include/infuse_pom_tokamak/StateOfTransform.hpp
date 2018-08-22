@@ -1,7 +1,7 @@
 #ifndef __STATE_OF_TRANSFORM_HPP__
 #define __STATE_OF_TRANSFORM_HPP__
 
-#include <PositionManagerBase.hpp>
+#include <infuse_pom_base/PositionManagerBase.hpp>
 
 namespace tokamak
 {

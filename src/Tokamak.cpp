@@ -1,4 +1,4 @@
-#include <Tokamak.hpp>
+#include <infuse_pom_tokamak/Tokamak.hpp>
 
 namespace tokamak
 {
