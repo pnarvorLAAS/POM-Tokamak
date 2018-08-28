@@ -83,6 +83,11 @@ namespace tokamak
                 _ensure();  
             }
 
+            void printSize()
+            {
+                std::cout <<" Number of elements currently in the timeLine: " <<  deque_.size() << std::endl;
+            }
+
             void print()
             {
                 for (iterator it = map_.begin(); it != map_.end(); it++)

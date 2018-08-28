@@ -475,4 +475,11 @@ namespace tokamak
         unlockTimeLine();
         return it;
     }
+
+    void Tokamak::printNumberOfElements()
+    {
+        lockTimeLine();
+        timeLine->printSize();
+        unlockTimeLine();
+    }
 }

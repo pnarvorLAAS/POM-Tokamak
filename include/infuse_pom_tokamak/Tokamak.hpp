@@ -124,6 +124,8 @@ namespace tokamak
             bool unFlagTransform(PositionManager::TimeUs time);
             StateOfTransform timeLine_find(PositionManager::TimeUs key);
 
+            void printNumberOfElements();
+
 
     };
 }
