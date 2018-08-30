@@ -105,6 +105,37 @@ namespace tokamak
 
         return true;
     }
+    
+    bool Tokamak::readInternalFrames(std::string pathToUrdf)
+    {
+        std::cout << "Reading internal frames" << std::endl;
+        PositionManager::UrdfParser parser;
+        try
+        {
+            if (!parser.parseURDF(pathToUrdf))
+            {
+                throw e_urdf;
+            }
+        }
+
+        catch (std::exception const &e)
+        {
+            std::cout << "[URDF parsing failed]: " << e.what() << std::endl;
+            return false;
+        }
+
+        for(list<PositionManager::FrameId>::iterator it = parser._frameIds.begin(); it != parser._frameIds.end(); ++it)
+        {
+            internalFramesGraph.addFrame(*it);
+        }
+
+        for(list<PositionManager::Pose>::iterator it = parser._poses.begin(); it != parser._poses.end(); ++it)
+        {
+            internalFramesGraph.addTransform(it->_parent, it->_child, it->_tr);
+        }
+
+        return true;
+    }
 
     bool Tokamak::addFixedFrame(const PositionManager::Pose& transform)
     {
@@ -171,7 +202,10 @@ namespace tokamak
             // Case where the transform we want to insert is not from the robot
             if (childFrame.compare(robotBodyFrame) != 0)
             {
-                throw e_wrong_childframe;
+                if (!internalFramesGraph.containsFrame(childFrame))
+                {
+                    throw e_wrong_childframe;
+                }
             }
 
             // Case of a "non-transform" : same times and same frames
@@ -215,6 +249,11 @@ namespace tokamak
 
         try
         {
+            if (transform._child != robotBodyFrame)
+            {
+                PositionManager::Transform robotFrame_childFrame = internalFramesGraph.getTransform(robotBodyFrame,transform._child);
+                transform._tr = transform._tr * robotFrame_childFrame;
+            }
 
             // Case delta pose
             if (transform._parent == transform._child)

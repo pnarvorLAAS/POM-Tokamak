@@ -41,6 +41,7 @@ namespace tokamak
             PositionManager::FrameId robotBodyFrame; // Frame describing the robot pose
             int32_t bufferSize; // Size of the buffer to hold all information in memory
             PositionManager::Graph fixedFramesGraph;
+            PositionManager::Graph internalFramesGraph;
 
             std::mutex transformAccess;
             void lockTimeLine();
@@ -67,6 +68,7 @@ namespace tokamak
             bool setAbsolutePose(double& x, double& y, double& z, double& phi, std::string& absoluteFrameId); // Set the heading from GPS data.
 
             bool readFixedFrames(std::string pathToUrdf);
+            bool readInternalFrames(std::string pathToUrdf);
             bool addFixedFrame(const PositionManager::Pose& transform);
             bool getFixedTransform(const PositionManager::FrameId& parent); // Get Transform from world fixed frame to robot body frame
             bool convertTransform(PositionManager::Pose& pose); // Convert given robot pose to robot pose in fixed frame
