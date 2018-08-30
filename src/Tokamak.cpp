@@ -176,7 +176,7 @@ namespace tokamak
             pose._tr = pose._tr * fixedTransform._tr;
         }
         pose._parent = fixedFrame;
-        pose._child = robotBodyFrame;
+        pose._child = "GPSFrame";
         return true;
     }
 
@@ -251,9 +251,10 @@ namespace tokamak
         {
             if (transform._child != robotBodyFrame)
             {
+                std::cout << "Test" << std::endl;
                 PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(transform._child,robotBodyFrame);
                 PositionManager::Transform parentFrame_robotFrame = transform._tr * childFrame_robotFrame;
-                transform._tr = parentFrame_robtoFrame;
+                transform._tr = parentFrame_robotFrame;
             }
 
             // Case delta pose
