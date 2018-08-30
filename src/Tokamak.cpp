@@ -252,7 +252,8 @@ namespace tokamak
             if (transform._child != robotBodyFrame)
             {
                 PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(transform._child,robotBodyFrame);
-                transform._tr = transform._tr * childFrame_robotFrame;
+                PositionManager::Transform parentFrame_robotFrame = transform._tr * childFrame_robotFrame;
+                transform._tr = parentFrame_robtoFrame;
             }
 
             // Case delta pose
