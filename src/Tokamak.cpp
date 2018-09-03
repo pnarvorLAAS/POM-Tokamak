@@ -272,7 +272,7 @@ namespace tokamak
             // Case Normal pose
             if (transform._parent == fixedFrame) // The incoming transform "fixedFrame" is the right one
             {
-                tfState.pose_fixedFrame_robotFrame = transform;
+                tfState.pose_fixedFrame_robotFrame._tr = transform._tr;
             }
             else
             {
