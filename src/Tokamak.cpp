@@ -160,23 +160,11 @@ namespace tokamak
 
     bool Tokamak::convertTransform(PositionManager::Pose & pose)
     {
-        //TO BE CHECKED
-        if (pose._parent == fixedFrame)
-        {
-            return true;
-        }
-
-        if (!getFixedTransform(pose._parent))
-        {
-            return false;
-        }
-
-        else
-        {
-            pose._tr = pose._tr * fixedTransform._tr;
-        }
+        PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(pose._child,robotBodyFrame);
+        PositionManager::Transform parentFrame_robotFrame = pose._tr * childFrame_robotFrame;
+        pose._tr = parentFrame_robotFrame;
         pose._parent = fixedFrame;
-        pose._child = "GPSFrame";
+        pose._child = robotBodyFrame;
         return true;
     }
 
@@ -249,13 +237,6 @@ namespace tokamak
 
         try
         {
-            if (transform._child != robotBodyFrame)
-            {
-                std::cout << "Test" << std::endl;
-                PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(transform._child,robotBodyFrame);
-                PositionManager::Transform parentFrame_robotFrame = transform._tr * childFrame_robotFrame;
-                transform._tr = parentFrame_robotFrame;
-            }
 
             // Case delta pose
             if (transform._parent == transform._child)
