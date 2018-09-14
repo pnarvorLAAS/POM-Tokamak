@@ -67,8 +67,10 @@ namespace tokamak
         absPose._parent = absoluteFrameId;
         absPose._child = robotBodyFrame;
 
-        absPose._parentTime = PositionManager::TimeManager::now();
-        absPose._childTime = PositionManager::TimeManager::now();
+        //absPose._parentTime = PositionManager::TimeManager::now();
+        //absPose._childTime = PositionManager::TimeManager::now();
+        absPose._parentTime= 0;
+        absPose._childTime =  0;
 
         //Insertion of the Pose inside the timeLine
 
