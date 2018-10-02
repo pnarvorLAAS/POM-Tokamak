@@ -230,7 +230,7 @@ namespace tokamak
         tfState.pose_fixedFrame_robotFrame._parent = fixedFrame;
         tfState.pose_fixedFrame_robotFrame._child = robotBodyFrame;
         tfState.pose_fixedFrame_robotFrame._childTime = transform._childTime;
-        tfState.pose_fixedFrame_robotFrame._parentTime = transform._childTime;
+        tfState.pose_fixedFrame_robotFrame._parentTime = transform._parentTime;
 
         // Time of addition inside the timeLine
         tfState.timeOfAddition = PositionManager::TimeManager::now();
