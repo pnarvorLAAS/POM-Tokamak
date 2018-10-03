@@ -164,6 +164,10 @@ namespace tokamak
     {
         //PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(pose._child,robotBodyFrame);
         PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(pose._child, robotBodyFrame);
+        std::string internalString = childFrame_robotFrame.toString();
+        std::cout << "Getting Robot->GPS : " << std::endl;
+        std::cout << internalString << std::endl;
+
         PositionManager::Transform parentFrame_robotFrame = pose._tr * childFrame_robotFrame;
         pose._tr = parentFrame_robotFrame;
         //pose._parent = fixedFrame;
