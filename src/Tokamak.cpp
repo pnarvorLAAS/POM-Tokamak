@@ -163,7 +163,7 @@ namespace tokamak
     bool Tokamak::convertTransform(PositionManager::Pose & pose)
     {
         //PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(pose._child,robotBodyFrame);
-        PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(robotBodyFrame, pose._child);
+        PositionManager::Transform childFrame_robotFrame = internalFramesGraph.getTransform(pose._child, robotBodyFrame);
         PositionManager::Transform parentFrame_robotFrame = pose._tr * childFrame_robotFrame;
         pose._tr = parentFrame_robotFrame;
         //pose._parent = fixedFrame;
