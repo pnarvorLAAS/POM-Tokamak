@@ -12,6 +12,7 @@ option (WITH_ASN1 "Compile the ASN.1 Wrapper of pom-tokamak" TRUE)
 if (WITH_ASN1)
     find_package(infuse_asn1_types REQUIRED)
     find_package(infuse_asn1_conversions REQUIRED)
+    find_package(infuse_pom_base REQUIRED)
 
     SET(SOURCES
         src/Tokamak.cpp
@@ -35,8 +36,10 @@ if (WITH_ASN1)
     
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
     target_link_libraries(${PROJECT_NAME} infuse_pom_base infuse_asn1_conversions::pom_conversions infuse_asn1_types::infuse_asn1_types gtsam) 
-    target_include_directories(${PROJECT_NAME} PRIVATE include/ PUBLIC ${GTSAM_INCLUDE_DIR})
-    
+    target_include_directories(${PROJECT_NAME} PUBLIC
+        ${GTSAM_INCLUDE_DIR}
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+    )
     set_target_properties (${PROJECT_NAME}
         PROPERTIES
             VERSION ${PROJECT_VERSION}
@@ -47,7 +50,34 @@ if (WITH_ASN1)
     set(REQUIRED_COMPONENTS "infuse_pom_base, infuse_asn1_conversions_pom, infuse_asn1_types")
 
 else()
-    message(STATUS "\n\n[ATTENTION] You're currently trying to compile TOKAMAK without ASN.1 support. This build is not supported at the moment. Please set the option WITH_ASN1 to TRUE\n\n")
+
+    SET(SOURCES
+        src/Tokamak.cpp
+    )
+    
+    SET(HEADERS
+        include/infuse_pom_tokamak/Tokamak.hpp
+        include/infuse_pom_tokamak/circularMap.hpp
+        include/infuse_pom_tokamak/exception.hpp
+        include/infuse_pom_tokamak/StateOfTransform.hpp
+    )
+    
+    
+    add_library(${PROJECT_NAME} SHARED ${SOURCES})
+    target_link_libraries(${PROJECT_NAME} infuse_pom_base gtsam) 
+    target_include_directories(${PROJECT_NAME} PUBLIC
+        ${GTSAM_INCLUDE_DIR}
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+    )
+    
+    set_target_properties (${PROJECT_NAME}
+        PROPERTIES
+            VERSION ${PROJECT_VERSION}
+            OUTPUT_NAME ${PROJECT_NAME}
+            PUBLIC_HEADER "${HEADERS}"
+    )
+
+    set(REQUIRED_COMPONENTS "infuse_pom_base")
 
 endif(WITH_ASN1)
 
