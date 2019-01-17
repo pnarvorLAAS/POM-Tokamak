@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(PKG_DESCRIPTION "Tokamak: pose fuser for all localizers running on the robot")
 
 find_package(infuse_pom_base REQUIRED)
+find_package(GTSAM REQUIRED)
 
 option (WITH_ASN1 "Compile the ASN.1 Wrapper of pom-tokamak" TRUE)
 
@@ -27,8 +28,8 @@ if (WITH_ASN1)
     
     
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
-    target_link_libraries(${PROJECT_NAME} infuse_pom_base infuse_asn1_conversions::pom_conversions infuse_asn1_types::infuse_asn1_types) 
-    target_include_directories(${PROJECT_NAME} PRIVATE include/)
+    target_link_libraries(${PROJECT_NAME} infuse_pom_base infuse_asn1_conversions::pom_conversions infuse_asn1_types::infuse_asn1_types gtsam) 
+    target_include_directories(${PROJECT_NAME} PRIVATE include/ PUBLIC ${GTSAM_INCLUDE_DIR})
     
     set_target_properties (${PROJECT_NAME}
         PROPERTIES

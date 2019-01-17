@@ -10,8 +10,14 @@
 #include <vector>
 #include <mutex>
 
-#define DEFAULT_FREQUENCY   30 // Frequency at which poses are outputed
-#define DEFAULT_TIME_KEPT   300 // Maximum size of the timeline in seconds
+//GTSAM
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/slam/PriorFactor.h> // For fixed frames
+#include <gtsam/slam/BetweenFactor.h> // For odometry
+#include <gtsam/nonlinear/NonlinearFactor.h> // For absolute poses. Factors need to be implemented
+#include <gtsam/geometry/Pose2.h>
+#include <gtsam/geometry/Pose3.h>
+
 #define DEFAULT_CONSERVATION_TIME 300 //Time during wich we conserve unflagged transforms in seconds
 #define DEFAULT_FIXED_FRAME "localTerrainFrame" // Fixed reference frame in which robot poses will be outputed
 #define DEFAULT_ROVER_FRAME "robotBodyFrame" // Frame of the robot
@@ -26,20 +32,21 @@
 #define e_no_publish                    Error("Publishing of poses has not yet started")
 #define e_urdf                          Error("Cannot process URDF file")
 
+using namespace gtsam;
 
 namespace tokamak
 {
     typedef std::map<PositionManager::TimeUs,StateOfTransform>::iterator iterator;
+    enum POSE_TYPE {FULL_POSE,TRANSLATION,ORIENTATION};
+
 
     class Tokamak
     {
         private:
             circularMap<PositionManager::TimeUs,StateOfTransform>* timeLine; 
-            int32_t runningFrequency; //Frequency of the base job of PoM (release latest pose)
-            int32_t secondsKept; // Number of seconds contained into memory
             PositionManager::FrameId fixedFrame; // Frame in which the robot pose will be released by PoM
             PositionManager::FrameId robotBodyFrame; // Frame describing the robot pose
-            int32_t bufferSize; // Size of the buffer to hold all information in memory
+            int bufferSize; // Size of the buffer to hold all information in memory
             PositionManager::Graph fixedFramesGraph;
             PositionManager::Graph internalFramesGraph;
 
@@ -49,18 +56,27 @@ namespace tokamak
 
             PositionManager::Pose fixedTransform;
 
+            //GTSAM
+            std::shared_ptr<gtsam::NonlinearFactorGraph> poseGraph;
+
 
         protected:
             PositionManager::Pose posePublish;
             PositionManager::Pose poseRespond;
 
+        protected:
+            // Those are the factor that we are going to use in the graph
+            std::unique_ptr<NoiseModelFactor2<Pose2,Pose3> > LTFFactor;
+            std::unique_ptr<NoiseModelFactor2<Pose3,Pose3> > RelativeFactor;
+
+        public:
+            //This is the part you want to rewrite in inheritance when you create new factors
+            virtual POSE_TYPE createFactor(const std::vector<bool> estimatedData);
+
 
         public:
             Tokamak();
-            Tokamak(int32_t freq); // Constructor with tokamak running frequency
-            Tokamak(int32_t freq, int32_t sec); // Constructor with tokamak running frequency and number of seconds kept
-            Tokamak(int32_t freq, int32_t sec, std::string worldFrame);
-            Tokamak(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame);
+            Tokamak(std::string worldFrame, std::string robotFrame);
             ~Tokamak();
             void clean_up(); // Release memory allocated by instanciating tokamak
             void print_buffer(){timeLine->print();}

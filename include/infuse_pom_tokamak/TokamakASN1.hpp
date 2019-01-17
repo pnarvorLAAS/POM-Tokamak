@@ -21,10 +21,7 @@ namespace tokamak
 
         public:
             TokamakASN1();
-            TokamakASN1(int32_t freq); 
-            TokamakASN1(int32_t freq, int32_t sec); 
-            TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame);
-            TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame);
+            TokamakASN1(std::string worldFrame, std::string robotFrame);
             void init();
 
             ~TokamakASN1();

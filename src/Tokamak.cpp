@@ -4,41 +4,15 @@ namespace tokamak
 {
     Tokamak::Tokamak( )
     {
-        runningFrequency = DEFAULT_FREQUENCY;
-        secondsKept = DEFAULT_TIME_KEPT;
-        bufferSize = DEFAULT_FREQUENCY * DEFAULT_TIME_KEPT;
         fixedFrame = DEFAULT_FIXED_FRAME;
         robotBodyFrame = DEFAULT_ROVER_FRAME;
+        bufferSize = 100000;
         timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
     }
 
-    Tokamak::Tokamak(int32_t freq): runningFrequency(freq)
+    Tokamak::Tokamak(std::string worldFrame, std::string robotFrame): fixedFrame(worldFrame), robotBodyFrame(robotFrame)
     {
-        secondsKept = DEFAULT_TIME_KEPT;
-        fixedFrame = DEFAULT_FIXED_FRAME;
-        robotBodyFrame = DEFAULT_ROVER_FRAME;
-        bufferSize = runningFrequency * DEFAULT_TIME_KEPT;
-        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
-    }
-
-    Tokamak::Tokamak(int32_t freq, int32_t sec): runningFrequency(freq), secondsKept(sec)
-    {
-        fixedFrame = DEFAULT_FIXED_FRAME;
-        robotBodyFrame = DEFAULT_ROVER_FRAME;
-        bufferSize = runningFrequency * secondsKept;
-        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
-    }
-
-    Tokamak::Tokamak(int32_t freq, int32_t sec, std::string worldFrame): runningFrequency(freq), secondsKept(sec), fixedFrame(worldFrame)
-    {
-        robotBodyFrame = DEFAULT_ROVER_FRAME;
-        bufferSize = runningFrequency * secondsKept;
-        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
-    }
-
-    Tokamak::Tokamak(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame): runningFrequency(freq), secondsKept(sec), fixedFrame(worldFrame), robotBodyFrame(robotFrame)
-    {
-        bufferSize = runningFrequency * secondsKept;
+        bufferSize = 10000;
         timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
     }
 

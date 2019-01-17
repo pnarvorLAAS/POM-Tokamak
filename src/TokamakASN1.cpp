@@ -7,17 +7,7 @@ namespace tokamak{
         init();
     }
 
-    TokamakASN1::TokamakASN1(int32_t freq): Tokamak(freq)
-    {
-        init();
-    }
-    
-    TokamakASN1::TokamakASN1(int32_t freq, int32_t sec): Tokamak(freq,sec)
-    {
-        init();
-    }
-
-    TokamakASN1::TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame): Tokamak(freq,sec,worldFrame)
+    TokamakASN1::TokamakASN1(std::string worldFrame, std::string robotFrame): Tokamak(worldFrame,robotFrame)
     {
         init();
     }
@@ -33,16 +23,6 @@ namespace tokamak{
         memset(perBuffer,0,asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING);
     }
 
-    TokamakASN1::TokamakASN1(int32_t freq, int32_t sec, std::string worldFrame, std::string robotFrame): Tokamak(freq,sec,worldFrame,robotFrame)
-    {
-        poseInFuseInsert    = new asn1SccTransformWithCovariance;
-        poseInFuseRespond   = new asn1SccTransformWithCovariance;
-        poseInFusePublish   = new asn1SccTransformWithCovariance;
-        poseInFuseRequest   = new asn1SccTransformWithCovariance;
-
-        perBuffer = new byte[asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING];
-        memset(perBuffer,0,asn1SccTransformWithCovariance_REQUIRED_BYTES_FOR_ENCODING);
-    }
 
     TokamakASN1::~TokamakASN1()
     {
