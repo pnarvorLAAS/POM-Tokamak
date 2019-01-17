@@ -24,6 +24,7 @@ if (WITH_ASN1)
         include/infuse_pom_tokamak/circularMap.hpp
         include/infuse_pom_tokamak/exception.hpp
         include/infuse_pom_tokamak/StateOfTransform.hpp
+        include/factors/LTFMeasure.hpp
     )
     
     

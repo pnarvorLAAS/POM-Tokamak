@@ -1,4 +1,5 @@
 #include <infuse_pom_tokamak/Tokamak.hpp>
+#include <infuse_pom_tokamak/factors/LTFMeasure.hpp>
 
 namespace tokamak
 {
@@ -25,26 +26,42 @@ namespace tokamak
 
     bool Tokamak::setAbsolutePose(double& x, double& y, double& z, double& phi,std::string& absoluteFrameId)
     {
-        //Creation of the Pose to insert
+        // Create new symbol for fixed frame
 
-        PositionManager::Pose absPose;
-        absPose._tr.transform.cov = 1e-6*base::Matrix6d::Identity();
-        absPose._tr.transform.orientation =  base::Quaterniond(base::AngleAxisd(phi,base::Vector3d::UnitZ()));
-        absPose._tr.transform.translation(0) = x;
-        absPose._tr.transform.translation(1) = y;
-        absPose._tr.transform.translation(2) = z;
+        fixedFramesSymbol.insert(std::pair<std::string,gtsam::Symbol>("LocalTerrainFrame",gtsam::Symbol('x',fixedFramesCounter)));
+        fixedFramesCounter++;
 
-        absPose._parent = absoluteFrameId;
-        absPose._child = robotBodyFrame;
+        // Get location of LTF in World frame
 
-        //absPose._parentTime = PositionManager::TimeManager::now();
-        //absPose._childTime = PositionManager::TimeManager::now();
-        absPose._parentTime= 0;
-        absPose._childTime =  0;
+        PositionManager::Transform absolute_world = fixedFramesGraph.getTransform(absoluteFrameId, fixedFrame);
 
-        //Insertion of the Pose inside the timeLine
+        // Create Pose2 
 
-        return insertNewTransform(absPose);
+        Pose2 LTFMeasure(x - absolute_world.transform.translation(0), y - absolute_world.transform.translation(1), phi);
+
+        poseGraph->add(LTFMeasure::Prior(fixedFramesSymbol["LocalTerrainFrame"].key(), LTFMeasure, noiseModel::Diagonal::Sigmas((Vector(3) << 1e-6,1e-6,0.1).finished())));
+
+    
+        PositionManager::Transform absPose;
+        absPose.transform.cov = 1e-6*base::Matrix6d::Identity();
+        absPose.transform.orientation =  base::Quaterniond(base::AngleAxisd(phi,base::Vector3d::UnitZ()));
+        absPose.transform.translation(0) = x - absolute_world.transform.translation(0);
+        absPose.transform.translation(1) = y - absolute_world.transform.translation(1);
+        absPose.transform.translation(2) = z - absolute_world.transform.translation(2);
+
+        fixedFramesGraph.addTransform(fixedFrame, "LocalTerrainFrame", absPose );
+
+        //absPose._parent = absoluteFrameId;
+        //absPose._child = robotBodyFrame;
+
+        ////absPose._parentTime = PositionManager::TimeManager::now();
+        ////absPose._childTime = PositionManager::TimeManager::now();
+        //absPose._parentTime= 0;
+        //absPose._childTime =  0;
+
+        ////Insertion of the Pose inside the timeLine
+
+        //return insertNewTransform(absPose);
 	
     }
 

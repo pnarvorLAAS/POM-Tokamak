@@ -12,6 +12,7 @@
 
 //GTSAM
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/inference/Symbol.h>
 #include <gtsam/slam/PriorFactor.h> // For fixed frames
 #include <gtsam/slam/BetweenFactor.h> // For odometry
 #include <gtsam/nonlinear/NonlinearFactor.h> // For absolute poses. Factors need to be implemented
@@ -68,8 +69,9 @@ namespace tokamak
 
         protected:
             // Those are the factor that we are going to use in the graph
-            std::unique_ptr<NoiseModelFactor2<Pose2,Pose3> > LTFFactor;
-            std::unique_ptr<NoiseModelFactor2<Pose3,Pose3> > RelativeFactor;
+            double LTFaltitude;
+            int fixedFramesCounter;
+            std::map<std::string,gtsam::Symbol> fixedFramesSymbol;
 
         public:
             //This is the part you want to rewrite in inheritance when you create new factors
