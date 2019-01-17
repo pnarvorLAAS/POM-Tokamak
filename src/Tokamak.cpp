@@ -2,29 +2,25 @@
 
 namespace tokamak
 {
-    Tokamak::Tokamak( )
+    Tokamak::Tokamak( ) : fixedFrame(DEFAULT_FIXED_FRAME), robotBodyFrame(DEFAULT_ROVER_FRAME)
     {
-        fixedFrame = DEFAULT_FIXED_FRAME;
-        robotBodyFrame = DEFAULT_ROVER_FRAME;
-        bufferSize = 100000;
-        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
+        init();
     }
 
     Tokamak::Tokamak(std::string worldFrame, std::string robotFrame): fixedFrame(worldFrame), robotBodyFrame(robotFrame)
     {
-        bufferSize = 10000;
-        timeLine = new circularMap<PositionManager::TimeUs,StateOfTransform>(bufferSize);
+        init();
     }
 
-    Tokamak::~Tokamak()
+    void Tokamak::init()
     {
-        clean_up();
+        int buffersize = 10000;
+        timeLine = std::make_shared<circularMap<PositionManager::TimeUs,StateOfTransform>>(buffersize);
+        poseGraph = std::make_shared<gtsam::NonlinearFactorGraph>();
     }
 
-    void Tokamak::clean_up()
-    {
-        delete timeLine;
-    }
+    Tokamak::~Tokamak(){}
+
 
 
     bool Tokamak::setAbsolutePose(double& x, double& y, double& z, double& phi,std::string& absoluteFrameId)

@@ -43,7 +43,7 @@ namespace tokamak
     class Tokamak
     {
         private:
-            circularMap<PositionManager::TimeUs,StateOfTransform>* timeLine; 
+            std::shared_ptr<circularMap<PositionManager::TimeUs,StateOfTransform> > timeLine; 
             PositionManager::FrameId fixedFrame; // Frame in which the robot pose will be released by PoM
             PositionManager::FrameId robotBodyFrame; // Frame describing the robot pose
             int bufferSize; // Size of the buffer to hold all information in memory
@@ -53,11 +53,13 @@ namespace tokamak
             std::mutex transformAccess;
             void lockTimeLine();
             void unlockTimeLine();
+            void init();
 
             PositionManager::Pose fixedTransform;
 
             //GTSAM
             std::shared_ptr<gtsam::NonlinearFactorGraph> poseGraph;
+
 
 
         protected:
