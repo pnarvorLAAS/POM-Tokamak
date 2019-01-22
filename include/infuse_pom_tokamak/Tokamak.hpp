@@ -45,12 +45,14 @@ namespace tokamak
     class Tokamak
     {
         private:
+            typedef typename circularMap<PositionManager::TimeUs,StateOfTransform>::iterator timeIterator;
             std::shared_ptr<circularMap<PositionManager::TimeUs,StateOfTransform> > timeLine; 
             PositionManager::FrameId fixedFrame; // Frame in which the robot pose will be released by PoM
             PositionManager::FrameId robotBodyFrame; // Frame describing the robot pose
             int bufferSize; // Size of the buffer to hold all information in memory
             PositionManager::Graph fixedFramesGraph;
             PositionManager::Graph internalFramesGraph;
+            std::string poseBaseline;
 
             std::mutex transformAccess;
             void lockTimeLine();
@@ -76,6 +78,8 @@ namespace tokamak
 
         public:
             POSE_TYPE getPoseType(PositionManager::Pose& transform);
+            bool insertBaseline(PositionManager::Pose& transform, POSE_TYPE pt);
+            bool checkBaselineTranslation(PositionManager::Pose& transform);
 
         public:
             Tokamak();

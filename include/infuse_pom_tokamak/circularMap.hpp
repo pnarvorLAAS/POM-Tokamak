@@ -18,7 +18,8 @@ namespace tokamak
         {
             typedef map<K,V> map_t;
             typedef deque<K> deque_t;
-
+            
+            public:
             typedef typename std::map<K,V>::iterator iterator;
 
             private:

@@ -13,6 +13,9 @@ namespace tokamak
         PositionManager::TimeUs timeOfAddition;
         PositionManager::TimeUs timeOfParent;
         PositionManager::Pose pose_fixedFrame_robotFrame;
+        
+        int countOptimizer;
+        bool isComplete;
     };
 }
 

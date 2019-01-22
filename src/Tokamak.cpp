@@ -238,6 +238,10 @@ namespace tokamak
             //Check Pose type
 
             POSE_TYPE poseType = getPoseType(transform);
+            if (transform._producerId.compare(poseBaseline))
+            {
+                insertBaseline(transform, poseType);
+            }
 
             // Case delta pose
             if (transform._parent == transform._child)
@@ -286,15 +290,15 @@ namespace tokamak
             sum += transform._dataEstimated[i];
         }
 
-        if (sum == 3)
+        if (sum == 3) // 3 values estimated
         {
             return TRANSLATION;
         }
-        else if (sum == 4)
+        else if (sum == 4) // 4 values estimated
         {
             return ORIENTATION;
         }
-        else if (sum == 7)
+        else if (sum == 7) // All values estimated
         {
             return FULL_POSE;
         }
@@ -302,6 +306,137 @@ namespace tokamak
         {
             throw e_unknown_pose_type;
         }
+
+    }
+
+    bool Tokamak::insertBaseline(PositionManager::Pose& transform, POSE_TYPE pt)
+    {
+
+        /*TODO: 
+            - check locking of timeline for all of this.
+            - check variance computation 
+            - probably refactor the whole stuff
+        */
+
+        lockTimeLine();
+
+        timeIterator it = timeLine->find(transform._childTime);
+
+        if (it != timeLine->end())
+        {
+            if (pt == TRANSLATION)
+            {
+                PositionManager::Transform poseOfChild;
+
+                if (it->second.timeOfParent != 0) // Not the first input to timeLine
+                {
+                    //find parent
+                    timeIterator parent = timeLine->find(transform._parentTime);
+
+                    if (checkBaselineTranslation(transform))
+                    {
+                        //Compose with new pose
+                        poseOfChild = parent->second.pose_fixedFrame_robotFrame._tr * transform._tr;
+                    }
+                    else
+                    {
+                        // We did not move, dont change translation
+                        poseOfChild = parent->second.pose_fixedFrame_robotFrame._tr;
+                    }
+                }
+                else
+                {
+                    poseOfChild = transform._tr;
+                }
+
+                // Update translation
+                it->second.pose_fixedFrame_robotFrame._tr.transform.translation = poseOfChild.transform.translation;
+
+                //Set parent time
+                if (it->second.timeOfParent != 0)
+                {
+                    it->second.timeOfParent = transform._parentTime;
+                }
+                
+                //Set variance
+                it->second.pose_fixedFrame_robotFrame._tr.transform.cov.block<3,3>(0,0) = poseOfChild.transform.cov.block<3,3>(0,0);
+
+            }
+
+            else
+            {
+                it->second.pose_fixedFrame_robotFrame._tr.transform.orientation = transform._tr.transform.orientation;
+
+                //Set variance
+                it->second.pose_fixedFrame_robotFrame._tr.transform.cov.block<3,3>(3,3) = transform._tr.transform.cov.block<3,3>(3,3);
+            }
+
+            it->second.isComplete = true;
+        }
+        else
+        {
+
+            // Create new addition to the timeline
+            StateOfTransform tf;
+
+            tf.timeOfAddition = PositionManager::TimeManager::now();
+
+            bool firstInput = timeLine->empty();
+            if (firstInput)
+            {
+                tf.timeOfParent = 0;
+            }
+            tf.isComplete = false;
+            tf.pose_fixedFrame_robotFrame = transform; //Easy when it's the rotation
+
+            if (pt == TRANSLATION)
+            {
+                PositionManager::Transform poseOfChild;
+                if (!firstInput)
+                {
+                    //find parent
+                    tf.timeOfParent=  transform._parentTime;
+                    timeIterator parent = timeLine->find(transform._parentTime);
+                    //Compose with new pose
+                    if (checkBaselineTranslation(transform))
+                    {
+                        poseOfChild = parent->second.pose_fixedFrame_robotFrame._tr * transform._tr;
+                    }
+                    else
+                    {
+                        poseOfChild = parent->second.pose_fixedFrame_robotFrame._tr;
+                    }
+                }
+                else
+                {
+                    // First input is the direct transform
+                    poseOfChild = transform._tr;
+                }
+
+                tf.pose_fixedFrame_robotFrame._tr = poseOfChild;
+                tf.pose_fixedFrame_robotFrame._parent = fixedFrame;
+            }
+
+            timeLine->put(transform._childTime,tf);
+        }
+        unlockTimeLine();
+        return true;
+    }
+
+    bool Tokamak::checkBaselineTranslation(PositionManager::Pose &transform)
+    {
+        // Under a speed of 0.01m/s we consider it a zero translation
+        double dx = transform._tr.transform.translation(0);
+        double dy = transform._tr.transform.translation(1);
+        double dz = transform._tr.transform.translation(2);
+
+        double distance = sqrt(dx*dx+dy*dy+dz*dz);
+
+        if (distance < 0.01 / (transform._childTime - transform._parentTime))
+        {
+            return false;
+        }
+        return true;
 
     }
 
