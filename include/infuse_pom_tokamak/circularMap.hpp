@@ -73,6 +73,31 @@ namespace tokamak
             {
                 return map_.find(key);
             }
+
+            iterator find_closest(K key)
+            {
+                if (empty())
+                {
+                    return end();
+                }
+
+                iterator it = find_lower(key);
+                if (it == end())
+                {
+                    return std::prev(it);
+                }
+                else
+                {
+                    if (key - std::prev(it)->first < it->first - key)
+                    {
+                        return std::prev(it);
+                    }
+                    else
+                    {
+                        return it;
+                    }
+                }
+            }
             bool empty()
             {
                 return map_.empty();
@@ -97,6 +122,7 @@ namespace tokamak
                 }
                 std::cout << std::endl;
             }
+
         };
 }
 
