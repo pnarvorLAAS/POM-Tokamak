@@ -2,6 +2,7 @@
 #define __STATE_OF_TRANSFORM_HPP__
 
 #include <infuse_pom_base/PositionManagerBase.hpp>
+#include <gtsam/inference/Key.h>
 
 namespace tokamak
 {
@@ -16,6 +17,7 @@ namespace tokamak
         
         int countOptimizer;
         bool isComplete;
+        gtsam::Key graphKey;
     };
 }
 

@@ -1,5 +1,6 @@
 #include <infuse_pom_tokamak/Tokamak.hpp>
 #include <infuse_pom_tokamak/factors/LTFMeasure.hpp>
+#include <infuse_pom_tokamak/factors/RelativeMeasure.hpp>
 
 namespace tokamak
 {
@@ -39,8 +40,10 @@ namespace tokamak
 
         Pose2 LTFMeasure(x - absolute_world.transform.translation(0), y - absolute_world.transform.translation(1), phi);
 
+        // Add to graph
         poseGraph->add(LTFMeasure::Prior(fixedFramesSymbol["LocalTerrainFrame"].key(), LTFMeasure, noiseModel::Diagonal::Sigmas((Vector(3) << 1e-6,1e-6,0.1).finished())));
 
+        // Keep position of LTF in memory
     
         PositionManager::Transform absPose;
         absPose.transform.cov = 1e-6*base::Matrix6d::Identity();
@@ -267,11 +270,6 @@ namespace tokamak
                 tfState.pose_fixedFrame_robotFrame._tr = fixedFrame_robotFrame;
             }
 
-            // Add to timeLine
-
-            lockTimeLine();
-            timeLine->put(transform._childTime,tfState);
-            unlockTimeLine();
 
         }
         catch (std::exception const& e)
@@ -388,6 +386,7 @@ namespace tokamak
             }
             tf.isComplete = false;
             tf.pose_fixedFrame_robotFrame = transform; //Easy when it's the rotation
+            tf.graphKey = transform._childTime;
 
             if (pt == TRANSLATION)
             {
@@ -437,6 +436,70 @@ namespace tokamak
             return false;
         }
         return true;
+
+    }
+
+    bool Tokamak::addGraphFactor(PositionManager::Pose& transform, POSE_TYPE pt)
+    {
+        //Case transform is a delta pose
+        /* TODO:
+            - Care when timeline is locked
+            - Find closest time of parent and child in timeline
+            - Add factor between two nodes.
+        */
+
+        if (transform._parent == transform._child)
+        {
+            timeIterator titParent = timeLine->find_closest(transform._parentTime);
+            timeIterator titChild = timeLine->find_closest(transform._childTime);
+
+            if (titParent == timeLine->end() || titChild == timeLine->end())
+            {
+                throw e_wrong_delta;
+            }
+
+            // Case where pose is a translation
+            if (pt == TRANSLATION)
+            {
+                if (checkBaselineTranslation(transform))
+                {
+                    //Recreate measure
+                    gtsam::Point3 measure(transform._tr.transform.translation);
+                    
+                    RelativeMeasure::TranslationFactor transToAdd(titParent->second.graphKey,titChild->second.graphKey,measure,gtsam::noiseModel::Diagonal::Sigmas((Vector(3) << transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0)).finished()));
+                }
+                else 
+                {
+                    //TODO ADD 0-MOTION
+                }
+            }
+
+            return true;
+        }
+
+        // Case where we have LTF-> RBF transform
+        /* TODO:
+            - Find closest time of child in timeline
+            - Add factor according to pose type
+        */
+        if (transform._parent == fixedFrame)
+        {
+            return true;
+        }
+
+        // Case where we have GPS
+        /* TODO:
+            - Find closest time of child in timeline
+            - Get transform from GTF->SF
+            - Add factor in graph
+        */
+
+        else
+        {
+            return true;
+        }
+
+        
 
     }
 
