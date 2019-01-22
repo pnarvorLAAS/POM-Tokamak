@@ -32,6 +32,7 @@
 #define e_wrong_frames                  Error("The request is in the wrong frame")
 #define e_no_publish                    Error("Publishing of poses has not yet started")
 #define e_urdf                          Error("Cannot process URDF file")
+#define e_unknown_pose_type             Error("Only 3 pose types can be included at the moment: Translation, Rotation, and Full pose")
 
 using namespace gtsam;
 
@@ -67,16 +68,14 @@ namespace tokamak
             PositionManager::Pose posePublish;
             PositionManager::Pose poseRespond;
 
-        protected:
+        private:
             // Those are the factor that we are going to use in the graph
             double LTFaltitude;
             int fixedFramesCounter;
             std::map<std::string,gtsam::Symbol> fixedFramesSymbol;
 
         public:
-            //This is the part you want to rewrite in inheritance when you create new factors
-            virtual POSE_TYPE createFactor(const std::vector<bool> estimatedData);
-
+            POSE_TYPE getPoseType(PositionManager::Pose& transform);
 
         public:
             Tokamak();

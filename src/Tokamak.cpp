@@ -48,6 +48,8 @@ namespace tokamak
         absPose.transform.translation(0) = x - absolute_world.transform.translation(0);
         absPose.transform.translation(1) = y - absolute_world.transform.translation(1);
         absPose.transform.translation(2) = z - absolute_world.transform.translation(2);
+        
+        LTFaltitude  = z - absolute_world.transform.translation(2);
 
         fixedFramesGraph.addTransform(fixedFrame, "LocalTerrainFrame", absPose );
 
@@ -212,6 +214,8 @@ namespace tokamak
 
     bool Tokamak::insertNewTransform(PositionManager::Pose transform)
     {
+
+
         // Build the state of transform
         StateOfTransform tfState;
         tfState.fused = false;
@@ -231,6 +235,9 @@ namespace tokamak
 
         try
         {
+            //Check Pose type
+
+            POSE_TYPE poseType = getPoseType(transform);
 
             // Case delta pose
             if (transform._parent == transform._child)
@@ -269,6 +276,33 @@ namespace tokamak
         }
 
         return true;
+    }
+
+    POSE_TYPE Tokamak::getPoseType(PositionManager::Pose& transform)
+    {
+        int sum = 0;
+        for (int i = 0; i < 7; i++)
+        {
+            sum += transform._dataEstimated[i];
+        }
+
+        if (sum == 3)
+        {
+            return TRANSLATION;
+        }
+        else if (sum == 4)
+        {
+            return ORIENTATION;
+        }
+        else if (sum == 7)
+        {
+            return FULL_POSE;
+        }
+        else
+        {
+            throw e_unknown_pose_type;
+        }
+
     }
 
     bool Tokamak::insertNewTransforms(std::vector<PositionManager::Pose>& listOfTransforms)
