@@ -16,6 +16,7 @@ if (WITH_ASN1)
     SET(SOURCES
         src/Tokamak.cpp
         src/TokamakASN1.cpp
+        src/factors/LTFMeasure.cpp
     )
     
     SET(HEADERS
