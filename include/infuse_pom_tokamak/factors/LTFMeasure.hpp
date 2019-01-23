@@ -56,7 +56,7 @@ namespace tokamak
 
             typedef boost::shared_ptr<FullPoseFactor> shared_ptr;
 
-            FullPoseFactor(Key j1, Key j2, Pose3 measure, const SharedNoiseModel& model, double altitude) : NoiseModelFactor2<Pose2,Pose3>(model, j1, j2),measure_(measure), altitude_(altitude) {}
+            FullPoseFactor(Key j1, Key j2, Pose3 measure, double altitude, const SharedNoiseModel& model) : NoiseModelFactor2<Pose2,Pose3>(model, j1, j2),measure_(measure), altitude_(altitude) {}
 
             Vector evaluateError(const Pose2 &Ti, const Pose3 &Tj, boost::optional<Matrix&> Hi = boost::none, boost::optional<Matrix&> Hj = boost::none) const;
         };
