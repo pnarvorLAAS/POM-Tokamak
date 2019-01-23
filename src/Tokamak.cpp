@@ -2,6 +2,7 @@
 #include <infuse_pom_tokamak/factors/LTFMeasure.hpp>
 #include <infuse_pom_tokamak/factors/RelativeMeasure.hpp>
 #include <infuse_pom_tokamak/factors/Unary.hpp>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
 namespace tokamak
 {
@@ -423,7 +424,7 @@ namespace tokamak
         timeIterator titChild = timeLine->find_closest(transform._childTime);
         if  (titChild == timeLine->end())
         {
-            unlockTimeline();
+            unlockTimeLine();
             throw e_pose_insertion_future;
         }
             
@@ -553,6 +554,45 @@ namespace tokamak
         }
 
         
+
+    }
+
+    bool Tokamak::optimize()
+    {
+        lockTimeLine();
+        gtsam::NonlinearFactorGraph graphOpti(*poseGraph);
+        Values initialEstimate;
+        for (std::pair<PositionManager::TimeUs,StateOfTransform> it : *timeLine)
+        {
+            Point3 trans(it.second.pose_fixedFrame_robotFrame._tr.transform.translation);
+            Rot3 rot(it.second.pose_fixedFrame_robotFrame._tr.transform.orientation);
+            Pose3 estimate(rot,trans);
+            initialEstimate.insert(it.second.graphKey,estimate);
+        }
+        unlockTimeLine();
+
+        // Do the same for LTF
+
+        PositionManager::Transform LTFPose = fixedFramesGraph.getTransform(graphFrame,fixedFrame);
+        Eigen::Vector3d euler = LTFPose.transform.orientation.toRotationMatrix().eulerAngles(2,1,0);
+        Pose2 est(LTFPose.transform.translation(0), LTFPose.transform.translation(1),euler[0]);
+        initialEstimate.insert(fixedFramesSymbol[fixedFrame].key(),est);
+
+        gtsam::LevenbergMarquardtOptimizer optimizer(graphOpti,initialEstimate);
+        Values result = optimizer.optimize();
+
+        //Update timeline with new values
+
+        PositionManager::Transform LTFInverse = LTFPose.inverse();
+        lockTimeLine();
+        for (timeIterator it = timeLine->begin(); it!= timeLine->end(); it++)
+        {
+            Pose3 optiValue = result.at<Pose3>(it->second.graphKey);
+            PositionManager::Transform tf(optiValue.translation().vector(), optiValue.rotation().toQuaternion());
+            PositionManager::Transform optimizedValue = LTFInverse * tf;
+            it->second.pose_fixedFrame_robotFrame._tr = optimizedValue;
+        }
+        unlockTimeLine();
 
     }
 

@@ -84,6 +84,7 @@ namespace tokamak
             bool insertBaseline(PositionManager::Pose& transform, POSE_TYPE pt);
             bool checkBaselineTranslation(PositionManager::Pose& transform);
             bool addGraphFactor(PositionManager::Pose& transform, POSE_TYPE pt);
+            bool optimize();
 
         public:
             Tokamak();
