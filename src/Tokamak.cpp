@@ -419,9 +419,11 @@ namespace tokamak
     bool Tokamak::addGraphFactor(PositionManager::Pose& transform, POSE_TYPE pt)
     {
         // Find time closest to child in timeline
+        lockTimeLine();
         timeIterator titChild = timeLine->find_closest(transform._childTime);
         if  (titChild == timeLine->end())
         {
+            unlockTimeline();
             throw e_pose_insertion_future;
         }
             
@@ -462,6 +464,9 @@ namespace tokamak
                 poseGraph->add(transToAdd);
             }
 
+            unlockTimeLine();
+            return true;
+
         }
 
         //Case transform is a delta pose
@@ -475,6 +480,7 @@ namespace tokamak
 
             if (titParent == timeLine->end() || titChild == timeLine->end())
             {
+                unlockTimeLine();
                 throw e_wrong_delta;
             }
             
@@ -513,9 +519,11 @@ namespace tokamak
             }
             else
             {
+                unlockTimeLine();
                 throw e_pose_not_recognized;
             }
-
+            
+            unlockTimeLine();
             return true;
         }
         else
@@ -536,8 +544,11 @@ namespace tokamak
             }
             else
             {
+                unlockTimeLine();
                 throw e_pose_not_recognized;
             }
+
+            unlockTimeLine();
             return true;
         }
 
