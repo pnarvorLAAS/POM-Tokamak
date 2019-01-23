@@ -33,6 +33,8 @@
 #define e_no_publish                    Error("Publishing of poses has not yet started")
 #define e_urdf                          Error("Cannot process URDF file")
 #define e_unknown_pose_type             Error("Only 3 pose types can be included at the moment: Translation, Rotation, and Full pose")
+#define e_pose_not_recognized           Error("Unable to process such pose")
+#define e_pose_insertion_future         Error("Can't insert pose in graph that are in the future")
 
 using namespace gtsam;
 
@@ -72,6 +74,7 @@ namespace tokamak
 
         private:
             // Those are the factor that we are going to use in the graph
+            std::string graphFrame;
             double LTFaltitude;
             int fixedFramesCounter;
             std::map<std::string,gtsam::Symbol> fixedFramesSymbol;

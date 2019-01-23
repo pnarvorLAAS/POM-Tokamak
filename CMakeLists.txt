@@ -18,6 +18,7 @@ if (WITH_ASN1)
         src/TokamakASN1.cpp
         src/factors/LTFMeasure.cpp
         src/factors/RelativeMeasure.cpp
+        src/factors/Unary.cpp
     )
     
     SET(HEADERS
@@ -26,8 +27,9 @@ if (WITH_ASN1)
         include/infuse_pom_tokamak/circularMap.hpp
         include/infuse_pom_tokamak/exception.hpp
         include/infuse_pom_tokamak/StateOfTransform.hpp
-        include/factors/LTFMeasure.hpp
-        include/factors/RelativeMeasure.cpp
+        include/infuse_pom_tokamak/factors/LTFMeasure.hpp
+        include/infuse_pom_tokamak/factors/RelativeMeasure.hpp
+        include/infuse_pom_tokamk/factors/Unary.hpp
     )
     
     

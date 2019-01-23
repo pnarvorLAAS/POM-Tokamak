@@ -1,6 +1,7 @@
 #include <infuse_pom_tokamak/Tokamak.hpp>
 #include <infuse_pom_tokamak/factors/LTFMeasure.hpp>
 #include <infuse_pom_tokamak/factors/RelativeMeasure.hpp>
+#include <infuse_pom_tokamak/factors/Unary.hpp>
 
 namespace tokamak
 {
@@ -41,7 +42,7 @@ namespace tokamak
         Pose2 LTFMeasure(x - absolute_world.transform.translation(0), y - absolute_world.transform.translation(1), phi);
 
         // Add to graph
-        poseGraph->add(LTFMeasure::Prior(fixedFramesSymbol["LocalTerrainFrame"].key(), LTFMeasure, noiseModel::Diagonal::Sigmas((Vector(3) << 1e-6,1e-6,0.1).finished())));
+        poseGraph->add(LTFMeasure::Prior(fixedFramesSymbol["LocalTerrainFrame"].key(), LTFMeasure, noiseModel::Diagonal::Variances((Vector(3) << 1e-6,1e-6,0.1).finished())));
 
         // Keep position of LTF in memory
     
@@ -245,31 +246,7 @@ namespace tokamak
             {
                 insertBaseline(transform, poseType);
             }
-
-            // Case delta pose
-            if (transform._parent == transform._child)
-            {
-                StateOfTransform tfParent = timeLine_find(transform._parentTime);
-                PositionManager::Transform fixedFrame_robotFrame_parentTime = tfParent.pose_fixedFrame_robotFrame._tr;
-
-                PositionManager::Transform fixedFrame_robotFrame_childTime = fixedFrame_robotFrame_parentTime * transform._tr;
-                tfState.pose_fixedFrame_robotFrame._tr = fixedFrame_robotFrame_childTime;
-                tfState.isDeltaPose = true;
-                tfState.timeOfParent = transform._parentTime;
-            }
-
-            // Case Normal pose
-            if (transform._parent == fixedFrame) // The incoming transform "fixedFrame" is the right one
-            {
-                tfState.pose_fixedFrame_robotFrame._tr = transform._tr;
-            }
-            else
-            {
-                PositionManager::Transform fixedFrame_worldFrame = fixedFramesGraph.getTransform(fixedFrame,transform._parent);
-                PositionManager::Transform fixedFrame_robotFrame = fixedFrame_worldFrame * transform._tr;
-                tfState.pose_fixedFrame_robotFrame._tr = fixedFrame_robotFrame;
-            }
-
+            addGraphFactor(transform,poseType);
 
         }
         catch (std::exception const& e)
@@ -441,22 +418,67 @@ namespace tokamak
 
     bool Tokamak::addGraphFactor(PositionManager::Pose& transform, POSE_TYPE pt)
     {
+        // Find time closest to child in timeline
+        timeIterator titChild = timeLine->find_closest(transform._childTime);
+        if  (titChild == timeLine->end())
+        {
+            throw e_pose_insertion_future;
+        }
+            
+        gtsam::Key childKey = titChild->second.graphKey;
+
+        // Case where we have LTF-> RBF transform
+        if (transform._parent == fixedFrame || titChild->second.pose_fixedFrame_robotFrame._parentTime == 0)
+        {
+            // Get parent key (LTF)
+            gtsam::Key parentKey = fixedFramesSymbol[fixedFrame].key();
+
+            // Case Translation
+            if (pt == TRANSLATION)
+            {
+                //Recreate measure
+                gtsam::Point3 measure(transform._tr.transform.translation);
+                LTFMeasure::TranslationFactor transToAdd(parentKey,childKey,measure,LTFaltitude,gtsam::noiseModel::Diagonal::Variances((Vector(3) << transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0)).finished()));
+                
+                //Add to graph
+                poseGraph->add(transToAdd);
+            }
+
+            //Case rotation
+            else if (pt == ORIENTATION)
+            {
+                gtsam::Rot3 measure(transform._tr.transform.orientation);
+                LTFMeasure::RotationFactor rotToAdd(parentKey,childKey,measure,noiseModel::Diagonal::Variances(transform._tr.transform.cov.diagonal().tail(3)));
+                poseGraph->add(rotToAdd);
+            }
+
+            // Case full pose
+            else if (pt == FULL_POSE)
+            {
+                gtsam::Rot3 rotation(transform._tr.transform.orientation);
+                gtsam::Point3 translation(transform._tr.transform.translation);
+                gtsam::Pose3 measure(rotation,translation);
+                LTFMeasure::FullPoseFactor transToAdd(parentKey,childKey,measure,LTFaltitude,noiseModel::Diagonal::Variances(transform._tr.transform.cov.diagonal()));
+                poseGraph->add(transToAdd);
+            }
+
+        }
+
         //Case transform is a delta pose
         /* TODO:
             - Care when timeline is locked
-            - Find closest time of parent and child in timeline
-            - Add factor between two nodes.
         */
-
+    
         if (transform._parent == transform._child)
         {
             timeIterator titParent = timeLine->find_closest(transform._parentTime);
-            timeIterator titChild = timeLine->find_closest(transform._childTime);
 
             if (titParent == timeLine->end() || titChild == timeLine->end())
             {
                 throw e_wrong_delta;
             }
+            
+            gtsam::Key parentKey = titParent->second.graphKey;
 
             // Case where pose is a translation
             if (pt == TRANSLATION)
@@ -465,37 +487,57 @@ namespace tokamak
                 {
                     //Recreate measure
                     gtsam::Point3 measure(transform._tr.transform.translation);
+                    RelativeMeasure::TranslationFactor transToAdd(parentKey,childKey,measure,gtsam::noiseModel::Diagonal::Variances((Vector(3) << transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0)).finished()));
                     
-                    RelativeMeasure::TranslationFactor transToAdd(titParent->second.graphKey,titChild->second.graphKey,measure,gtsam::noiseModel::Diagonal::Sigmas((Vector(3) << transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0), transform._tr.transform.cov(0,0)).finished()));
+                    //Add to graph
+                    poseGraph->add(transToAdd);
                 }
                 else 
                 {
-                    //TODO ADD 0-MOTION
+                    // No translation
+                    gtsam::Point3 measure(0,0,0);
+                    RelativeMeasure::TranslationFactor transToAdd(parentKey,childKey,measure,noiseModel::Diagonal::Variances((Vector(3) << 1e-6, 1e-6, 1e-6).finished()));
+                    // Add to graph
+                    poseGraph->add(transToAdd);
                 }
+            }
+            else if (pt == FULL_POSE)
+            {
+                //Create pose
+                gtsam::Point3 translation(transform._tr.transform.translation);
+                gtsam::Rot3 rotation(transform._tr.transform.orientation);
+                gtsam::Pose3 measure(rotation,translation);
+                RelativeMeasure::FullPoseFactor poseToAdd(parentKey,childKey,measure,noiseModel::Diagonal::Variances(transform._tr.transform.cov.diagonal()));
+                poseGraph->add(poseToAdd);
+
+            }
+            else
+            {
+                throw e_pose_not_recognized;
             }
 
             return true;
         }
-
-        // Case where we have LTF-> RBF transform
-        /* TODO:
-            - Find closest time of child in timeline
-            - Add factor according to pose type
-        */
-        if (transform._parent == fixedFrame)
-        {
-            return true;
-        }
-
-        // Case where we have GPS
-        /* TODO:
-            - Find closest time of child in timeline
-            - Get transform from GTF->SF
-            - Add factor in graph
-        */
-
         else
         {
+            PositionManager::Transform parent_graphFrame = fixedFramesGraph.getTransform(transform._parent,graphFrame);
+            if (transform._parent != robotBodyFrame)
+            {
+                PositionManager::Transform robot_sensor = fixedFramesGraph.getTransform(robotBodyFrame,transform._child);
+                Point3 t_robot_sensor(robot_sensor.transform.translation);
+                Rot3 rot_parent_graph(parent_graphFrame.transform.orientation);
+                Point3 t_parent_graph(parent_graphFrame.transform.translation);
+                Pose3 parent_graph(rot_parent_graph,t_parent_graph);
+
+                Point3 measure(transform._tr.transform.translation);
+                Unary::GPSFactor transToAdd(childKey, measure, t_robot_sensor, parent_graph, noiseModel::Diagonal::Variances(transform._tr.transform.cov.diagonal().head(3)));
+                poseGraph->add(transToAdd);
+
+            }
+            else
+            {
+                throw e_pose_not_recognized;
+            }
             return true;
         }
 
