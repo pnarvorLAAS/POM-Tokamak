@@ -88,7 +88,7 @@ namespace tokamak
 
         public:
             Tokamak();
-            Tokamak(std::string worldFrame, std::string robotFrame);
+            Tokamak(std::string worldFrame, std::string robotFrame, std::string graphFrameName, std::string poseBaseLine);
             ~Tokamak();
             void clean_up(); // Release memory allocated by instanciating tokamak
             void print_buffer(){timeLine->print();}

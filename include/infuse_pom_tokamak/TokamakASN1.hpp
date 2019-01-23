@@ -21,7 +21,7 @@ namespace tokamak
 
         public:
             TokamakASN1();
-            TokamakASN1(std::string worldFrame, std::string robotFrame);
+            TokamakASN1(std::string worldFrame, std::string robotFrame, std::string graphFrame, std::string baseline);
             void init();
 
             ~TokamakASN1();

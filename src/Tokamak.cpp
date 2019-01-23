@@ -11,7 +11,7 @@ namespace tokamak
         init();
     }
 
-    Tokamak::Tokamak(std::string worldFrame, std::string robotFrame): fixedFrame(worldFrame), robotBodyFrame(robotFrame)
+    Tokamak::Tokamak(std::string worldFrame, std::string robotFrame, std::string graphFrameName, std::string baseline): fixedFrame(worldFrame), robotBodyFrame(robotFrame), graphFrame(graphFrameName), poseBaseline(baseline)
     {
         init();
     }
@@ -31,19 +31,19 @@ namespace tokamak
     {
         // Create new symbol for fixed frame
 
-        fixedFramesSymbol.insert(std::pair<std::string,gtsam::Symbol>("LocalTerrainFrame",gtsam::Symbol('x',fixedFramesCounter)));
+        fixedFramesSymbol.insert(std::pair<std::string,gtsam::Symbol>(fixedFrame,gtsam::Symbol('x',fixedFramesCounter)));
         fixedFramesCounter++;
 
         // Get location of LTF in World frame
 
-        PositionManager::Transform absolute_world = fixedFramesGraph.getTransform(absoluteFrameId, fixedFrame);
+        PositionManager::Transform absolute_world = fixedFramesGraph.getTransform(absoluteFrameId, graphFrame);
 
         // Create Pose2 
 
         Pose2 LTFMeasure(x - absolute_world.transform.translation(0), y - absolute_world.transform.translation(1), phi);
 
         // Add to graph
-        poseGraph->add(LTFMeasure::Prior(fixedFramesSymbol["LocalTerrainFrame"].key(), LTFMeasure, noiseModel::Diagonal::Variances((Vector(3) << 1e-6,1e-6,0.1).finished())));
+        poseGraph->add(LTFMeasure::Prior(fixedFramesSymbol[fixedFrame].key(), LTFMeasure, noiseModel::Diagonal::Variances((Vector(3) << 1e-6,1e-6,0.1).finished())));
 
         // Keep position of LTF in memory
     
@@ -56,20 +56,7 @@ namespace tokamak
         
         LTFaltitude  = z - absolute_world.transform.translation(2);
 
-        fixedFramesGraph.addTransform(fixedFrame, "LocalTerrainFrame", absPose );
-
-        //absPose._parent = absoluteFrameId;
-        //absPose._child = robotBodyFrame;
-
-        ////absPose._parentTime = PositionManager::TimeManager::now();
-        ////absPose._childTime = PositionManager::TimeManager::now();
-        //absPose._parentTime= 0;
-        //absPose._childTime =  0;
-
-        ////Insertion of the Pose inside the timeLine
-
-        //return insertNewTransform(absPose);
-	
+        fixedFramesGraph.addTransform(graphFrame, fixedFrame , absPose );
     }
 
     bool Tokamak::readFixedFrames(std::string pathToUrdf)

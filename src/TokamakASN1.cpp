@@ -7,7 +7,7 @@ namespace tokamak{
         init();
     }
 
-    TokamakASN1::TokamakASN1(std::string worldFrame, std::string robotFrame): Tokamak(worldFrame,robotFrame)
+    TokamakASN1::TokamakASN1(std::string worldFrame, std::string robotFrame, std::string graphFrame, std::string baseline): Tokamak(worldFrame,robotFrame, graphFrame, baseline)
     {
         init();
     }
