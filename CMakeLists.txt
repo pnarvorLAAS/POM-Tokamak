@@ -29,7 +29,7 @@ if (WITH_ASN1)
         include/infuse_pom_tokamak/StateOfTransform.hpp
         include/infuse_pom_tokamak/factors/LTFMeasure.hpp
         include/infuse_pom_tokamak/factors/RelativeMeasure.hpp
-        include/infuse_pom_tokamk/factors/Unary.hpp
+        include/infuse_pom_tokamak/factors/Unary.hpp
     )
     
     
