@@ -86,6 +86,8 @@ namespace tokamak
             bool addGraphFactor(PositionManager::Pose& transform, POSE_TYPE pt);
             bool optimize();
 
+            void printTimeLineToFile(const std::string fileName);
+
         public:
             Tokamak();
             Tokamak(std::string worldFrame, std::string robotFrame, std::string graphFrameName, std::string poseBaseLine);
@@ -102,7 +104,7 @@ namespace tokamak
             bool convertTransform(PositionManager::Pose& pose); // Convert given robot pose to robot pose in fixed frame
 
             void validityCheckInsertion(const PositionManager::Pose transform);
-            bool insertNewTransform(PositionManager::Pose transform /*,timeLine*/);
+            bool insertNewTransform(PositionManager::Pose& transform /*,timeLine*/);
             bool insertNewTransforms(std::vector<PositionManager::Pose>& listOfTransforms /*, timeLine*/);
             PositionManager::Pose getLatestRobotPose(/*timeLine,posePublish,fixedFrame*/); // Latest Transform from RBF (Robot Body Frame) to LTF (Local Terrain Frame)
 

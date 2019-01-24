@@ -3,6 +3,7 @@
 #include <infuse_pom_tokamak/factors/RelativeMeasure.hpp>
 #include <infuse_pom_tokamak/factors/Unary.hpp>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <fstream>
 
 namespace tokamak
 {
@@ -170,7 +171,7 @@ namespace tokamak
         try
         {
             // Case where transform goes from future to past
-            if (parentTime < childTime)
+            if (parentTime > childTime)
             {
                 throw e_inverse_time_transform;
             }
@@ -204,7 +205,7 @@ namespace tokamak
         }
     }
 
-    bool Tokamak::insertNewTransform(PositionManager::Pose transform)
+    bool Tokamak::insertNewTransform(PositionManager::Pose& transform)
     {
 
 
@@ -230,7 +231,7 @@ namespace tokamak
             //Check Pose type
 
             POSE_TYPE poseType = getPoseType(transform);
-            if (transform._producerId.compare(poseBaseline))
+            if (!transform._producerId.compare(poseBaseline))
             {
                 insertBaseline(transform, poseType);
             }
@@ -250,7 +251,8 @@ namespace tokamak
         int sum = 0;
         for (int i = 0; i < 7; i++)
         {
-            sum += transform._dataEstimated[i];
+            if (transform._dataEstimated[i])
+                sum++;
         }
 
         if (sum == 3) // 3 values estimated
@@ -267,6 +269,7 @@ namespace tokamak
         }
         else
         {
+            std::cout << "Sum is " << sum << std::endl;
             throw e_unknown_pose_type;
         }
 
@@ -283,10 +286,14 @@ namespace tokamak
 
         lockTimeLine();
 
+
         timeIterator it = timeLine->find(transform._childTime);
+
+        std::cout << "Pose type : " << pt << std::endl;
 
         if (it != timeLine->end())
         {
+
             if (pt == TRANSLATION)
             {
                 PositionManager::Transform poseOfChild;
@@ -381,6 +388,7 @@ namespace tokamak
                 tf.pose_fixedFrame_robotFrame._parent = fixedFrame;
             }
 
+            std::cout << "Putting transform in timeline" << std::endl;
             timeLine->put(transform._childTime,tf);
         }
         unlockTimeLine();
@@ -785,6 +793,23 @@ namespace tokamak
         {
             return getTransform(parentTime,childTime,frame,frame);
         }
+
+    void Tokamak::printTimeLineToFile(const std::string fileName)
+    {
+        ofstream file;
+
+        file.open(fileName);
+        file << "ChildTime x y z qw qx qy qz\n";
+
+        lockTimeLine();
+        for (std::pair<PositionManager::TimeUs,StateOfTransform> it : *timeLine)
+        {
+            file << it.second.pose_fixedFrame_robotFrame._childTime << " " << it.second.pose_fixedFrame_robotFrame._tr.transform.translation(0) << "  " << it.second.pose_fixedFrame_robotFrame._tr.transform.translation(1) << " " <<  it.second.pose_fixedFrame_robotFrame._tr.transform.translation(2) << " " <<  it.second.pose_fixedFrame_robotFrame._tr.transform.orientation.w() << " " << it.second.pose_fixedFrame_robotFrame._tr.transform.orientation.x() << " " << it.second.pose_fixedFrame_robotFrame._tr.transform.orientation.y() << " " << it.second.pose_fixedFrame_robotFrame._tr.transform.orientation.z() << "\n";
+        }
+        
+        unlockTimeLine();
+        file.close();
+    }
 
     void Tokamak::lockTimeLine()
     {
