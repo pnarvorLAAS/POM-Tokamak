@@ -388,7 +388,6 @@ namespace tokamak
                 tf.pose_fixedFrame_robotFrame._parent = fixedFrame;
             }
 
-            std::cout << "Putting transform in timeline" << std::endl;
             timeLine->put(transform._childTime,tf);
         }
         unlockTimeLine();
@@ -799,6 +798,7 @@ namespace tokamak
         ofstream file;
 
         file.open(fileName);
+        file.precision(16);
         file << "ChildTime x y z qw qx qy qz\n";
 
         lockTimeLine();
