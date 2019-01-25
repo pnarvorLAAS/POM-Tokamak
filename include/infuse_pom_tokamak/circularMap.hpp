@@ -11,7 +11,7 @@ using namespace std;
 
 namespace tokamak
 {
-#define DEFAULT_SIZE 10000
+#define DEFAULT_SIZE 100000
 
     template <typename K, typename V>
         class circularMap
