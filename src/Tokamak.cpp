@@ -19,7 +19,7 @@ namespace tokamak
 
     void Tokamak::init()
     {
-        int buffersize = 10000;
+        int buffersize = 100000;
         timeLine = std::make_shared<circularMap<PositionManager::TimeUs,StateOfTransform>>(buffersize);
         poseGraph = std::make_shared<gtsam::NonlinearFactorGraph>();
     }
@@ -289,8 +289,6 @@ namespace tokamak
 
         timeIterator it = timeLine->find(transform._childTime);
 
-        std::cout << "Pose type : " << pt << std::endl;
-
         if (it != timeLine->end())
         {
 
@@ -316,7 +314,16 @@ namespace tokamak
                 }
                 else
                 {
-                    poseOfChild = transform._tr;
+                    if (checkBaselineTranslation(transform))
+                    {
+                        poseOfChild.transform.translation = Eigen::Vector3d(0,0,0);
+                        poseOfChild.transform.cov.block<3,3>(0,0) = Eigen::Matrix3d::Identity() * 1e-6;
+                    }
+                    else
+                    {
+                        // First input is the direct transform
+                        poseOfChild = transform._tr;
+                    }
                 }
 
                 // Update translation
@@ -368,6 +375,13 @@ namespace tokamak
                     //find parent
                     tf.timeOfParent=  transform._parentTime;
                     timeIterator parent = timeLine->find(transform._parentTime);
+                    if (parent == timeLine->end())
+                    {
+                        std::cout << "I cannot find the parent of the odometry pose. Odometry timeline is broken" << std::endl;
+                        std::cout << "Parent time was: " << transform._parentTime  << std::endl;
+                        timeIterator latest = timeLine->last_element();
+                        std::cout << "Latest time available was" << latest->first << std::endl;
+                    }
                     //Compose with new pose
                     if (checkBaselineTranslation(transform))
                     {
@@ -380,8 +394,16 @@ namespace tokamak
                 }
                 else
                 {
-                    // First input is the direct transform
-                    poseOfChild = transform._tr;
+                    if (checkBaselineTranslation(transform))
+                    {
+                        poseOfChild.transform.translation = Eigen::Vector3d(0,0,0);
+                        poseOfChild.transform.cov.block<3,3>(0,0) = Eigen::Matrix3d::Identity() * 1e-6;
+                    }
+                    else
+                    {
+                        // First input is the direct transform
+                        poseOfChild = transform._tr;
+                    }
                 }
 
                 tf.pose_fixedFrame_robotFrame._tr = poseOfChild;
@@ -403,8 +425,13 @@ namespace tokamak
 
         double distance = sqrt(dx*dx+dy*dy+dz*dz);
 
-        if (distance < 0.01 / (transform._childTime - transform._parentTime))
+        if (distance < 0.01 * ((transform._childTime - transform._parentTime)* 1e-6))
         {
+            PositionManager::TimeUs timediff = (transform._childTime - transform._parentTime) * 1e-6;
+            //std::cout << "Distance is too short, putting 0s" << std::endl;
+            //std::cout << "Distance : " << distance;
+            //std::cout << "Time : " << timediff << std::endl;
+            //std::cout << "Min distance: " << 0.01 * timediff << std::endl;
             return false;
         }
         return true;
@@ -553,13 +580,19 @@ namespace tokamak
 
     bool Tokamak::optimize()
     {
+        std::cout << "Starting optimizer" << std::endl;
+        
+        PositionManager::Transform LTFPose = fixedFramesGraph.getTransform(graphFrame,fixedFrame);
+
         lockTimeLine();
         gtsam::NonlinearFactorGraph graphOpti(*poseGraph);
         Values initialEstimate;
+        initialEstimate.print("VALUES IN THE GRAPH: ");
         for (std::pair<PositionManager::TimeUs,StateOfTransform> it : *timeLine)
         {
-            Point3 trans(it.second.pose_fixedFrame_robotFrame._tr.transform.translation);
-            Rot3 rot(it.second.pose_fixedFrame_robotFrame._tr.transform.orientation);
+            PositionManager::Transform graphPose = LTFPose * it.second.pose_fixedFrame_robotFrame._tr;
+            Point3 trans(graphPose.transform.translation);
+            Rot3 rot(graphPose.transform.orientation);
             Pose3 estimate(rot,trans);
             initialEstimate.insert(it.second.graphKey,estimate);
         }
@@ -567,7 +600,6 @@ namespace tokamak
 
         // Do the same for LTF
 
-        PositionManager::Transform LTFPose = fixedFramesGraph.getTransform(graphFrame,fixedFrame);
         Eigen::Vector3d euler = LTFPose.transform.orientation.toRotationMatrix().eulerAngles(2,1,0);
         Pose2 est(LTFPose.transform.translation(0), LTFPose.transform.translation(1),euler[0]);
         initialEstimate.insert(fixedFramesSymbol[fixedFrame].key(),est);
@@ -587,6 +619,8 @@ namespace tokamak
             it->second.pose_fixedFrame_robotFrame._tr = optimizedValue;
         }
         unlockTimeLine();
+        std::cout << "Optimization complete" << std::endl;
+        return true;
 
     }
 
