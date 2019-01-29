@@ -76,6 +76,8 @@ namespace tokamak
             // Those are the factor that we are going to use in the graph
             std::string graphFrame;
             double LTFaltitude;
+            int numberOfGraphAdditions;
+            int numberOfFactors;
             int fixedFramesCounter;
             std::map<std::string,gtsam::Symbol> fixedFramesSymbol;
 
