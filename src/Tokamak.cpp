@@ -57,8 +57,6 @@ namespace tokamak
         absPose.transform.translation(1) = y - absolute_world.transform.translation(1);
         absPose.transform.translation(2) = z - absolute_world.transform.translation(2);
 
-        std::cout << absPose.toString() << std::endl;
-        
         LTFaltitude  = z - absolute_world.transform.translation(2);
 
         fixedFramesGraph.addTransform(graphFrame, fixedFrame , absPose );
@@ -462,6 +460,7 @@ namespace tokamak
         // Case where we have LTF-> RBF transform
         if (transform._parent == fixedFrame || titChild->second.timeOfParent == 0)
         {
+            std::cout << "Inserting LTF factor" << std::endl;
             // Get parent key (LTF)
             gtsam::Key parentKey = fixedFramesSymbol[fixedFrame].key();
 
@@ -522,6 +521,7 @@ namespace tokamak
     
         if (transform._parent == transform._child)
         {
+            std::cout << "Insert relative measure factor" << std::endl;
             timeIterator titParent = timeLine->find_closest(transform._parentTime);
 
             if (titParent == timeLine->end() || titChild == timeLine->end())
@@ -575,9 +575,10 @@ namespace tokamak
         else
         {
             PositionManager::Transform parent_graphFrame = fixedFramesGraph.getTransform(transform._parent,graphFrame);
-            if (transform._parent != robotBodyFrame)
+            std::cout << "Inserting unary factor ! " << std::endl;
+            if (transform._child != robotBodyFrame)
             {
-                PositionManager::Transform robot_sensor = fixedFramesGraph.getTransform(robotBodyFrame,transform._child);
+                PositionManager::Transform robot_sensor = internalFramesGraph.getTransform(robotBodyFrame,transform._child);
                 Point3 t_robot_sensor(robot_sensor.transform.translation);
                 Rot3 rot_parent_graph(parent_graphFrame.transform.orientation);
                 Point3 t_parent_graph(parent_graphFrame.transform.translation);
