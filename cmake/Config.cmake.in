@@ -2,8 +2,7 @@
 
 include(CMakeFindDependencyMacro)
 find_dependency(infuse_pom_base REQUIRED)
-find_dependency(infuse_asn1_conversions REQUIRED)
-find_dependency(infuse_asn1_types REQUIRED)
+@CONFIG_FILE_DEPENDENCIES@
 
 include("${CMAKE_CURRENT_LIST_DIR}/@TARGETS_EXPORT_NAME@.cmake")
 set_and_check(@PROJECT_NAME@_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")

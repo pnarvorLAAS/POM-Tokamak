@@ -47,6 +47,7 @@ if (WITH_ASN1)
             PUBLIC_HEADER "${HEADERS}"
     )
 
+    set(CONFIG_FILE_DEPENDENCIES "find_dependency(infuse_asn1_conversions REQUIRED)\nfind_dependency(infuse_asn1_types REQUIRED)")
     set(REQUIRED_COMPONENTS "infuse_pom_base, infuse_asn1_conversions_pom, infuse_asn1_types")
 
 else()
